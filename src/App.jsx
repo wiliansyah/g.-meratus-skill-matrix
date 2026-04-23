@@ -28,6 +28,10 @@ import {
   GraduationCap,
   Save,
   Briefcase,
+  SlidersHorizontal,
+  CheckCircle,
+  HelpCircle,
+  Download
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import {
@@ -61,7 +65,121 @@ try {
 const appId = 'meratus-skill-matrix';
 
 // ==========================================
-// 2. ENTERPRISE ARCHITECTURE
+// 2. EXISTING MODULES & DETAILED OBJECTIVES
+// ==========================================
+const RAW_EXISTING_MODULES = [
+  "Action Tracker 2023", "AI Workshop - AI Implementation Use Cases", "AI Workshop - Understanding the AI Landscape 2024", "Asset & Charter", "Asset Charter - Basic Understanding Marine Insurance", "Asset Charter - Bridge Resource Management BRM", "Asset Charter - Chartering Operations", "Asset Charter - Digital Inspection and Documentation Software", "Asset Charter - Engine Component Inspection Alat Berat Alat Ringan", "Asset Charter - Hydraulic System Inspection", "Asset Charter - IMO Regulation - Marine Pollution MARPOL", "Asset Charter - IMO Regulation SOLAS", "Asset Charter - Inspeksi QSHE Alat Berat Depo", "Asset Charter - Inspeksi QSHE Alat Berat Terminal", "Asset Charter - Inspeksi QSHE Operational Trucking MJT", "Asset Charter - Inspeksi QSHE Repair Container", "Asset Charter - Inspeksi QSHE Warehouse", "Asset Charter - Inspeksi QSHE Workshop", "Asset Charter - Inspeksi Steering", "Asset Charter - Introduction to Asset Charter Business", "Asset Charter - Introduction to Chartering", "Asset Charter - ISO 9001 2015", "Asset Charter - Lifting Cargoes on Flat Rack Container", "Asset Charter - Non Vessel Asset Management Truck Trailer", "Asset Charter - Non Vessel Risk Classification Measurement", "Asset Charter - Pemahaman SMS melalui QSHE Barriers", "Asset Charter - Standar Pedoman Implementasi QSHE Non Vessel", "BA - Asset Charter Introduction to QSHE Meratus", "BA - CLC Container Repair Process", "BA - CLC MLO Depot Business Marketing Strategy", "BA - CLC Receiving Delivery and Stuffing Stripping Process at Depo", "BA - Liner Basic Container", "BA - Liner Basic Knowledge Terminal Operation", "BA - Liner Introduction to MFEC", "BA - Liner Product Knowledge Meratus Liner", "BA - Liner Service Excellence", "BA - Liner Term of Shipment", "BA - Logistics Basic Knowledge Reefer", "BA - Logistics Customs Clearance", "BA - Logistics Sea Freight Domestic", "BA - Logistics Warehouse Transport", "BA - MSM Introduction to Ship Management", "BA - MTM Heavy Equipment Maintenance", "Basic CLC - Terminal Basic Knowledge Business Process CLC Terminal", "Basic CLC Depo Management", "Basic CLC Heavy Equipment", "Basic CLC Pengetahuan Bongkar Muat", "Basic CLC Penyerahan dan Penerimaan Kontainer", "Basic CLC Repair Container", "Basic English - 16 Basic Tenses", "Basic English - Email Writing", "Basic English - Negotiation Skills", "Basic English - Preposition of Time", "Basic English - Presentation Skills", "Basic Excel Function", "Basic Logistic HS Code dan Kepabeanan", "Basic Logistic Reefer Container Handling", "Basic Logistics - Commercial Account Plan", "Basic Logistics - Commercial Basic Agency International Service", "Basic Logistics - Commercial Exim dan Incoterms", "Basic Logistics - Commercial Incoterms Logistics", "Basic Logistics - Commercial Sales Skills", "Basic Logistics - Operations Operation Monitoring System Support", "Basic Logistics - Operations SCM Profit", "Basic Logistics - P3W Sales", "Basic Logistics Account Receivable", "Basic Logistics Airfreight", "Basic Logistics Basic Knowledge Business Process Logistics", "Basic Logistics Basic LCL Less than Container Load", "Basic Logistics Basic Operation", "Basic Logistics Custom Clearence", "Basic Logistics Customer Service", "Basic Logistics Industrial Project", "Basic Logistics Pemahaman Klaim Asuransi", "Basic Logistics Quality Management System", "Basic Logistics Sea Freight", "Basic Logistics Vendor Management", "Basic Logistics Warehouse Transport", "Basic Operation 3 Port Info Ship Particular", "Basic Operation 4 Loading Unloading", "Basic Operation 5 Container Inventory Management", "Basic Operation 9 IMDG Code", "Basic Public Speaking Skills", "Basic Shipping Basic Knowledge Business Process Shipping Liner", "BPM", "BPM - Assessment for Digital Transformation", "BPM - Basic Shipping Induction Inbound and Outbound Process", "BPM - Business Process Management Framework", "BPM - Core Model Framework", "BPM - Customer Centricity in Shipping Business", "BPM - Induction to Melina System", "BPM - Management of P3W", "BPM - Project Management", "BPM - Work Load Analysis for Project", "Business Control Framework 2024", "Business Negotiation Skill Malik", "Business Presentation Skill Malik", "Business Process Modelling for Level 10 Above", "CCT Manager as A Profession Officer Level", "CLC", "CLC - Backlog Management", "CLC - Block Diagram pada System Electric", "CLC - Block Diagram pada System Engine", "CLC - Block Diagram pada System Hydraulic", "CLC - Brake System", "CLC - Cara Menggunakan Common Tool", "CLC - Daily Maintenance", "CLC - Differential Final Drive", "CLC - Electrical System", "CLC - Engine System", "CLC - Failure Analisis Report", "CLC - Hydraulic System", "CLC - Hydraulic Troubleshooting", "CLC - Karakteristik Komponen Elektrik", "CLC - Karakteristik Komponen Non Elektrik", "CLC - Maintenance Process", "CLC - Mekanik Troubleshooting", "CLC - Nama Fungsi Prinsip Kerja Komponen Engine", "CLC - Pembacaan Menu pada Monitoring System", "CLC - Penanganan Claim Container", "CLC - Pengenalan Fungsi dari Komponen Accesories", "CLC - Pengenalan Fungsi dari Komponen Electric", "CLC - Pengenalan Fungsi dari Komponen Hydraulic", "CLC - Pengenalan Fungsi dari Komponen Power Train", "CLC - Pengetahuan Forklift", "CLC - Pengetahuan Reach Stacker", "CLC - Perencanaan Kebutuhan Alat Mekanis", "CLC - Perencanaan Lay Out Depo", "CLC - Pricing Strategy", "CLC - Setting and Adjustment Major Component", "CLC - Stack Hampar Container", "CLC - Stuffing Stripping", "CLC - Teknik Dasar Pengelasan", "CLC - Teknik Lepas Pasang Komponen Electric", "CLC - Teknik Survey Quality Control", "CLC - Tyre Management", "CLC - Upload Download Program pada Unit", "CLC - Yard Management system", "CLC- Penanganan Cargo", "Code of Conduct", "Code of Conduct English Version", "Code of Conduct for Manager", "Company Profile Meratus Group", "Company Regulation 2025 - 2027 Indonesian Version", "Company Regulation 2025-2027 English Version", "Contract Management System for Level 10 Above", "Control and Monitoring Malik", "Corp Comm - Branding Development", "Corp Comm - Communication Campaign", "CorpCom", "Corporate Culture 2025", "Crewing", "Crewing - Awareness ISO 37001 2016", "Crewing - Pelatihan Audit Internal ISO 37001 2016", "Edukasi Pemilahan Sampah", "Effective Collaboration Malik", "Effective Planning Malik", "EXAMPLE Basic Container", "Fin Acc - Bills to Invoice", "Fin Acc - Vendor Invoice Acceptance", "Finance", "Finance Policy - Annual Budget", "Fraud Awareness", "GA - Vehicle Maintenance", "GA - Vehicle Selling", "GA - Vehicle Usage", "GA-Asset Property", "Good Corporate Governance 2024", "Group Policy - Authority Matrix", "Group Policy - CAPEX", "Group Policy - for Level 10 Above", "Group Policy - Management of Non-Confirmity and Improvement", "Health Talk - Hari Anak - Ready Set School 2024", "Health Talk - Pencernaan Kuat Hidup Nikmat", "Health Talk - Virus Monkeypox", "HMM", "HMM - Claim Procedure", "HMM - Stowage Cargo Overview", "How To Create Contract - TPS HMM", "HR - Aspek Normatif Hubungan Industrial", "HR - Manajemen Remunerasi", "HR - Manajemen Talenta", "HR - Melaksanakan Analisa Beban Kerja", "HR - Membangun Komunikasi Organisasi Yang Efektif", "HR - Menyusun dan Merancang Kebutuhan Pembelajaran", "HR - Menyusun Kebutuhan SDM", "HR - Menyusun Peraturan Perusahaan Perjanjian Kerja", "HR - Menyusun Uraian Jabatan", "HR - Merancang Struktur Organisasi", "HR - Merumuskan Indikator Kinerja Individu", "HR - Merumuskan Proses Bisnis dan SOP MSDM", "HR - Merumuskan Strategi Manajemen SDM", "HR - Perselisihan Hubungan Industrial", "HR - Strategic Interviewing", "HRD", "Internal Audit", "Internal Audit - Enterprise Risk Management", "Introduction to E-Pact Employee Self Service", "Introduction to HRIS Time Management Module PeopleStrong Employee Self Service", "Introduction to Manager as A Profession", "Introduction to Objectives Key Results 2024", "Introduction to PeopleStrong Learning Module", "IR Management for Level 10 Above - 2025", "IT", "IT - Agile Scrum Introduction", "IT - BitLocker Implementation Security Awareness", "IT - Cybersecurity Awareness 2023", "IT - Design System", "IT - Electronic Data Interchange Introduction", "IT - Implementation of Cast Software as Software Intelligence Automated 2023", "IT - Implementing RPA to Support The Business", "IT - Incident Response", "IT - Infrastructure and Application Modernization", "IT - Introduction to Microsoft Fabric", "IT - ISO 27001 2022", "IT - Meratus ACE Support Services", "IT - Network Operation Center Introduction", "IT - Penetration Testing", "IT - Personal Data Protection Law Things You Need to Know", "IT - Remote Monitoring System for Vessel IoT Solution", "IT - Secure Access Service Edge SASE", "IT - Security Event Analysis", "IT - Test Driven Development Introduction", "IT - Understanding Security in Development and Operations Key Insights and Considerations", "IT - UX Research", "IT- Clean Architecture Design Pattern", "Leaders Talk Artificial Intelligence", "Leaders Talk Create Value Through Integrity - 2024", "Leaders Talk Economic Outlook", "Leaders Talk Hari Anti Korupsi Sedunia", "Leaders Talk Intrapreneurship Result Oriented", "Leaders Talk Intrapreneurship Sense of Ownership", "Leaders Talk Kenali Demam Berdarah dan Pencegahannya", "Leaders Talk Lesson from Eiger - From Local to the World", "Leaders Talk Nutrition Day 2024", "Leaders Talk We Aim for Customer Excellence Collaboration", "Leaders Talk We Put People First Be A Buddy", "Legal", "Legal - Amendment to Indonesian Shipping Law 101", "Legal - Implementation of Shipping Law", "Legal - Indonesia Capital Market", "Legal - Overview of Indonesia Employment Law", "Legal - Personal Data Protection", "Legal - Teknik Merancang Kontrak", "Liner - Basic Operation Transshipment", "Liner Commercial", "Liner Commercial - Basic Shipping 07 Term of Shipment", "Liner Commercial - Basic Shipping 1 Service Excellence", "Liner Commercial - Basic Shipping 10 Liner Services", "Liner Commercial - Basic Shipping 11 Basic Container", "Liner Commercial - Basic Shipping 12 Dangerous Goods", "Liner Commercial - Basic Shipping 13 Reefer Handling", "Liner Commercial - Basic Shipping 14 Breakbulk Cargo Project", "Liner Commercial - Basic Shipping 15 Cost of Failure Branch", "Liner Commercial - Basic Shipping 16 Sales Activity Customer Profile", "Liner Commercial - Basic Shipping 2 Product Knowledge and Cargo Shipment", "Liner Commercial - Basic Shipping 3 FAQ for Customer", "Liner Commercial - Basic Shipping 4 Basic Cargo Knowledge", "Liner Commercial - Basic Shipping 6 Bill of Lading", "Liner Commercial - Basic Shipping 8 Terminal Productivity Operation Pattern", "Liner Commercial - Basic Shipping Booking Process", "Liner Commercial - Basic Shipping Incoterm 2020", "Liner Commercial - Basic Shipping Marine Insurance", "Liner Commercial - Basic Shipping Meratus Extra VAS", "Liner Commercial - Basic Shipping Pengetahuan Kepabeanan dan Exim untuk Pelayaran", "Liner Commercial - Body Language", "Liner Commercial - Business Development", "Liner Commercial - Calculate Rate Freight", "Liner Commercial - Customer Contract Key Account Management", "Liner Commercial - Decision Making Unit", "Liner Commercial - Halal Cargo Assurance", "Liner Commercial - Know Your Customer", "Liner Commercial - Marine Cargo Insurance", "Liner Commercial - SOC Business", "Liner Commercial Handling Complaint", "Liner Ops", "Liner Ops - Container Procurement Methods Overview", "Liner Ops - Eva Line Empty Evacuation Plan", "Liner Ops - IDLE Container", "Liner Ops - Imbalance Mechanism Understanding Management", "Liner Ops - MFEC Basic of Navigation Passage plan", "Liner Ops - MFEC Operational Ship Performance", "Liner Ops - MFEC Voyage Efficiency knowledge", "Liner Ops - MFEC Weather Chart and Meteorology Analysis", "Liner Ops - PI Logistic Dwelling Time and Container Cycle", "Liner Ops - Seals Container Specification Depot Operation", "Liner Ops - Ship Stability", "Liner Ops - Voyage Proforma Scheduling Introduction", "Liner Trade", "Liner Trade - 01 Route Profitability", "Liner Trade - Annual Budgeting", "Liner Trade - Contribution Margin Engine Time Charter Equivalent and VOE", "Liner Trade - Customer Segmentation", "Liner Trade - Joint Slot 2024", "Liner Trade - Slot Cost", "Liner Trade - Tier Pricing", "Logistics", "Logistics - Cargo Document Handling", "Logistics - Claim and Insurance", "Logistics - ISO License Audit Process", "Logistics - Penerapan SJPH dan Penyelia Halal", "Logistics - Petty Cash BS", "Logistics - Vendor Management Sea Freight Domestic", "Management by Objective Malik", "Managing Conflicts Malik", "Managing Conversation Malik", "Managing Meeting Malik", "Managing Superiors and Colleagues Malik", "Managing Yourself Malik", "MariApps - Plan Management System", "M-Cheetah Game 2 Socialization", "MELISA - Booking Module", "MELISA - Customer Master", "MELISA - Customer Tier Pricing DSS", "MELISA - Documentation Module", "MELISA - Invoice Data Reference", "MELISA - Invoicing Module v0", "MELISA - Node Master 2024", "MELISA - OnOff Hire Module 2024", "MELISA - Penalty Booking", "MELISA - Port Call Report 2024", "MELISA - Quick Manual Container Movement and Status", "MELISA - Rate Report", "MELISA - Rating Method", "MELISA - Service Contract", "MELISA - Surcharge 2025", "MELISA - Training for SPU", "MELISA - VAS Booking", "Meratus Academy", "Meratus s New Vision and Mission", "Module PS [Others]", "M-One Customer Journey", "M-One Induction M-One for Internal Stakeholders", "MQS P3W Awareness 2026", "MSA", "MSA - Management System Data Base PBM", "MSA - Pelatihan Dasar Pengoperasian Ruber TYRE GANTRY", "MSA - Pelatihan Dasar Pengoperasian Side Loader Single Handler", "MSA - Pelatihan Harbour Mobile Crane", "MSA - Penanganan Container", "MSA - Penanganan Reefer Container", "MSA - Penanganan Uncontainerized", "MSA - Penanggulangan Kebakaran dan Pengenalan APAR", "MSA - Pendapatan Biaya PBM", "MSA - Pengetahuan Bongkar Muat 2023", "MSA - Pengetahuan Claim PBM", "MSA - Pengetahuan Container", "MSA - Pengetahuan Stowage Plan", "MSA - Pengoperasian Dasar Ship to Shore", "MSA - Perencanaan Bongkar Muat", "MSA - Perencanaan Kebutuhan TKBM", "MSA - Perencanaan Layout CY", "MSA - Stacking Container di CY", "MSM", "MSM - Painting Maintenance", "MSM Machinery - 01 Aux Mach Fuel System - 2025", "MSM Machinery - 01 Engine Performance Normal Operation 2026", "MSM Machinery - 01 Engine Plan Fuel System", "MSM Machinery - 02 Aux Mach Charge Air System", "MSM Machinery - 02 Engine Performance Overload Engine Operation", "MSM Machinery - 02 Engine Plan Charge Scavenge Air System", "MSM Machinery - 03 Engine Performance - Function of Collecting Data", "MSM Machinery - 03 Engine Plan Compression System", "MSM Machinery - 03 Fresh Water Generator 2026", "MSM Machinery - 04 Aux Mach Refrigerator 2026", "MSM Machinery - 04 Engine Performance - Heat Balance Efficiency", "MSM Machinery - 04 Engine Plan Starting Air System 2026", "MSM Machinery - 05 Aux Mach Controllable Pitch Propeller", "MSM Machinery - 05 Engine Performance Monitoring of Engine Performance", "MSM Machinery - 05 Engine Plan Cooling System", "MSM Machinery - 06 Aux Mach Lubricating Oil System 2026", "MSM Machinery - 06 Engine Performance Low load - Slow Steaming", "MSM Machinery - 06 Engine Plan Lubricating System 2026", "MSM Machinery - 07 Aux Mach Cooling System", "MSM Machinery - 08 Aux Mach Starting System 2026", "MSM Machinery - 09 Aux Mach Purification System", "MSM Marine - 01 Safety Of Life At Sea 2026", "MSM Marine - 02 Marine Polution 2026", "MSM Marine - 03 STCW 2010 - 2026", "MSM Marine - 04 MLC 2006 - 2026", "MSM Marine - 05 ISM Code 2026", "MSM Marine - 06 ISPS Code 2026", "MSM Marine - 07 Ballast Water Management 2026", "MSM Marine - 08 Garbage Management 2026", "MSM Marine - 09 Bridge Resource Management 2026", "MSM Marine - 10 Safety Drill 2026", "MSM Marine - 12 Class Survey 13 Ship Certificates 2026", "MSM Marine - 14 Crewing Management Certificate 2026", "MSM Marine - 15 UU Pelayaran 2026", "MTM", "NOVA - User Manual Procedure", "OKR Certification Leadership and Goal Setting Module 1", "OKR Certification Leadership and Goal Setting Module 2", "OKR Certification Leadership and Goal Setting Module 3", "OKR Certification Leadership and Goal Setting Module 4", "P3W Asuransi dan Klaim V 01", "Personal Development - 15 Management Essential to Become Good Manager - 2024", "Personal Development Computer Posture", "Personal Development Etika Pergaulan", "Problem Solving Malik", "Procurement", "Procurement - Basic Knowledge", "Procurement - D365 Inventory Request dan Purchase Request", "Procurement - D365 Permintaan Pembelian Aktiva Tetap PPAT", "Procurement - D365 Request for Quotation Purchase Order", "Procurement - Distribution Management", "Procurement - Finance for Non Finance", "Procurement - Inventory Management", "Procurement - Negotiation in Procurement", "Procurement - Warehouse Management", "Procurement MSM", "Procurement MSM - Econnect Flow Functionalities", "Procurement MSM - Safety Equipment Service", "Quality Awareness", "Risk Management for Level 12 Above", "Root Cause Analysis for Level 10 Above", "Safety Leadership 2024", "Sistem Informasi Ketidaksesuaian dan Pengembangan SIKaP", "SM - Docking Contract", "SM - Docking D-12", "SM - MariApps COMPASS Change Management", "SM Docking Management - Module 1 Background and Introduction to Dry Docking", "SM Docking Management - Module 2 Project Management", "SM Docking Management - Module 3 Planning and Specification", "SM Docking Management - Module 4 Tendering for Dry Dock Work", "SM Docking Management - Module 5 Dry Dock Preparation Execution and Supervision", "SM Docking Management - Module 6 Docking Undocking and Completion of Project", "SM Workshop - Generator", "SM Workshop - Global Maritime Distress Safety System", "Sosialisasi Aktivasi Registrasi CORETAX", "Sosialisasi BPJS Kesehatan Segmen PPU", "Sosialisasi BPJS Ketenagakerjaan - Manfaat Layanan BPJS", "Stakeholder Management", "The Will to Perform Malik", "Trucking", "Trucking - Abnormality Monitoring", "Trucking - Account Payable and DC Admin", "Trucking - Account Receivable and DC Admin", "Trucking - Backlog Management", "Trucking - Basic Investigation Root Cause Analysis", "Trucking - Basic Monitoring by GPS", "Trucking - Basic Transport Analyst", "Trucking - Basic Trucking Knowledge", "Trucking - Business Offering RFQ Payment Trip Cost Fuel", "Trucking - Business Overview", "Trucking - Control Tower", "Trucking - Control Tower Reporting", "Trucking - Daily Inspection P2H", "Trucking - Database Driver Personnel Management", "Trucking - Document Control", "Trucking - Dokumen Legalitas", "Trucking - Driver Management", "Trucking - Driver Performance Evaluation", "Trucking - Driver Regulation Compliance", "Trucking - Inventory Management", "Trucking - Maintenance Planning Scheduling", "Trucking - MJT Operation Overview", "Trucking - QSHE Operational Trucking", "Trucking - Recruitment Screening Driver", "Trucking - Risk Assesment HIRADC", "Trucking - Road Hazard Mapping", "Trucking - Safety Analysis Proactive Risk Identification", "Trucking - Safety Observation Card", "Trucking - Warehouse Management", "Tutorial Pelaporan SPT Tahunan Karyawan dan Pemadanan NIK-NPWP", "Vendor Management VMT and Sales Guidance"
+];
+const EXISTING_CLEANED = RAW_EXISTING_MODULES.map(s => s.toLowerCase().replace(/[^a-z0-9]/g, ''));
+
+const TOPIC_OBJECTIVES = {
+  // Asset Charter
+  "introduction to asset & charter business": "Understand about Asset & Charter business in summary, providing a high-level view of operations and strategic goals.",
+  "non vessel asset management (truck & trailer)": "Truck Chassis & Head Specifications: Understand technical specs and compatibility for operation base. Trailer Types (Skeleton type, Flatbed, Wingbox): Understand technical specs and different function of trailer.",
+  "super structure component inspection": "Understand the general step of inspection of super structure component to ensure equipment reliability and safety.",
+  "engine component inspection": "Understand the general step of inspection of engine component to prevent failure and extend asset lifecycle.",
+  "sale & disposal process": "Asset Disposal Criteria & Decision Making: Understand which assets qualify for disposal and the decision process. Sale Option vs Scrap vs Reuse. Documentation & Accountable compliance.",
+  "imo regulation - solas": "Have strong baseline of maritime regulations regarding the Safety of Life at Sea to ensure full compliance.",
+  "imo regulation - marine pollution": "Have strong baseline of maritime regulations (MARPOL) to prevent environmental hazards and comply with international laws.",
+  "imo regulation - colreg": "Have strong baseline of maritime regulations regarding Collision Regulations to maintain navigational safety.",
+  "brm (bridge resource management)": "Have knowledge to execute inspection and utilize Bridge Resource Management principles effectively.",
+  "erm (engine resource management)": "Have knowledge to execute inspection and utilize Engine Resource Management to optimize engine room operations.",
+  "use of digital inspection & documentation software": "Menggunakan aplikasi digital untuk inspeksi dan laporan (misalnya software Class, Safety Management Systems) & mampu menyusun laporan secara standar.",
+  "engine performance knowledge": "Ability to analyze if vessel is underperforming or running inefficiently through comprehensive data tracking.",
+  "regulatory compliance": "Understanding Regulatory requirement related to environment such as EEXI, CII, EU ETS, EU/UK MRV, SEEMP.",
+  "vessel reporting system": "Understanding data flow from Meratus reporting system such as DNA, M-vision, and ensuring proper data base for consumption & emission.",
+  "overview chartering business": "Understanding overview of Chartering business related to vessel speed, consumption, reporting, and performance related to TCD.",
+  "retrofit/ optimization project": "Ability to assess & analyze suitability of Retrofitting/Optimization potential for fleet modernization.",
+  "fraud awareness": "Understanding gap and potential for fuel theft/fraud and implementing proactive monitoring strategies.",
+  "lesson learned": "Identify critical incidents, decisions, and turning points during project execution; Evaluate past project outcomes to distinguish between root causes of success and failure.",
+  "budgeting, cost control & market analysis": "Identify potential all cost in SnP in order to select most efficient way for delivery and implement cost control to monitor expenditures.",
+  "reflagging and change of ownership": "Ensuring the effectiveness of process of reflagging and change of ownership by managing every step and compliance to all regulation.",
+  "moa : clauses, negosiation": "Evaluate and negotiate the terms and conditions of the Memorandum of Agreement (MoA) to ensure alignment with company policies.",
+  "ism code": "Pemahaman komprehensif terkait ISM Code untuk memastikan keselamatan maritim dan pencegahan polusi.",
+  "iso 9001 - quality management": "Pemahaman QMS (Quality Management System) untuk standarisasi mutu layanan dan proses bisnis perusahaan.",
+  "iso 45001 - safety & health management": "Pemahaman OHSMS (Occupational Health and Safety Management Systems) guna menjamin lingkungan kerja yang aman.",
+  "iso 14001 - environment management": "Pemahaman EMS (Environmental Management Systems) untuk meminimalisir dampak lingkungan dari operasional.",
+  "iso 28001 - supply chain": "Pemahaman Supply Chain Security Management Systems untuk melindungi rantai pasok maritim.",
+  "contractor safety management system": "Pemahaman persyaratan CSMS untuk memastikan kontraktor bekerja sesuai standar keselamatan Meratus.",
+  "new building management": "Understand how to establish and maintain a highly efficient, secure, and sustainable building management system.",
+  "basic understanding of marine insurance": "Understanding the role of H&M and P&I Insurance and how operational actions might affect insurance claims or liabilities.",
+  "commercial chartering & business development": "Market research & Data Analytics: Conducting effective market research and applying data analytics techniques to support strategic decision-making.",
+  "charter party agreement": "Understand party agreement in term of their structure, key clauses, legal implications, and operational impact.",
+  "tender management": "Essential knowledge and practical skills to manage the tendering process effectively, from preparation to contract award.",
+  "voyage estimation": "Able to perform accurate voyage estimations, including cost analysis, fuel consumption, port charges, and time calculations.",
+  "cargo stowage & stability": "Get solid understanding of ship stability principles, including factors affecting stability, methods of calculation, and regulatory requirements.",
+  "cargo lifting & securing": "Lifting Calculation & Rigging Arrangement Plan: Understand how to perform accurate lifting calculations and develop safe rigging arrangement plans.",
+  "dg cargo handling": "Understanding of DG classification, packaging, labeling, documentation, and emergency response procedures (IMDG Code).",
+  "chartering operations": "Basic Operation Management : Understand basic activities of operations i.e loading/unloading, shipping document, bunker process, agency, reefer.",
+
+  // Liner / Trade / Commercial
+  "liner services": "Understand Liner Services, Routes, and network coverage capabilities within the Meratus ecosystem.",
+  "basic container": "Understand definition, types, function, and cost implications of standard and specialized Containers.",
+  "product knowledge reefer & reefer handling": "Understand technical specifications, temperature controls, and proper handling procedures for Reefer cargo.",
+  "time charter equivalent": "Understand definition and Concept of Time Charter Equivalent (TCE) for evaluating vessel profitability.",
+  "bill of lading": "Understand Inbound, Outbound Manifest, Clearance Document, and legal standing of the Bill of Lading.",
+  "incoterm liner (2020)": "Understand International Commercial Terms in Shipping Industry and their risk/cost transfer points.",
+  "service excellence": "Understand the importance of Service Mindset - Service Orientation and implement Service Excellence to Customers.",
+  "pricing management": "Understand definition, business process, and pricing management, segmentation, tier pricing (freight, surcharge).",
+  "route profitability": "Understand component and how to calculate Route Profitability to ensure sustainable and high-margin operations.",
+  "shorterm pricing & long-term pricing trade off": "Understand and able to define pricing strategy both short and long term to optimize yield and market share.",
+  "vsa cooperation": "Understand how to design a Vessel Sharing Agreement (VSA) based on competition, market, and legal agreements with partners.",
+  "competitor's analysis": "Understand the scope of competition level in every service & route in term of capacity, market share, rate, volume.",
+
+  // Logistics / Terminal / CLC / Trucking
+  "business process management logistics": "Understanding MGLog business process from end-to-end to ensure smooth service delivery.",
+  "product mglog - sea freight domestic": "Understanding basic knowledge, routing, and commercial models about Sea Freight Domestic product.",
+  "p3w sales": "Understanding Policy, Process, Procedure & Working Instruction governing Sales operations and compliance.",
+  "tender management & strategy": "Understanding strategic approaches and competitive positioning to successfully win and execute tenders.",
+  "type of terminal": "Understanding of type terminal, classification, and function: Container, Multipurpose, Conventional / Traditional.",
+  "terminal crane working plan": "Understanding of Crane Working Plan (CWP) process: Stowage Instruction, Crane Intensity, Deployment, and maximizing efficiency.",
+  "terminal berthing allocation": "Understanding of Berthing Allocation: Service schedule vessel classification, proforma planning, and QA assignments.",
+  "idle container": "Understanding Importance of FIFO concept to reduce container idle across all areas and analyzing associated costs.",
+  "depot and trucking management": "Understanding how to manage Vendor Depot and Trucking, relocation process, and measuring vendor SLA/SLG.",
+  "port info & port restriction": "Understand Port Info to support safe, efficient, and well-planned vessel operations based on each port's unique characteristics.",
+  "bunker quantity survey": "Carry out bunker tank measurement using proper methods (sounding, MFM) to verify actual quantity and minimize disputes.",
+  "pengetahuan depo": "Memberikan pemahaman dasar tentang fungsi, struktur, dan proses kerja harian di depo kontainer.",
+  "pengetahuan stuffing / stripping": "Memahami proses pemuatan (stuffing) dan pembongkaran (stripping) kontainer sesuai standar operasional yang aman.",
+  "yard management system": "Memahami sistem manajemen lapangan kontainer (YMS) untuk meningkatkan produktivitas dan ketertelusuran unit.",
+  "pengetahuan repair container": "Memberikan pemahaman dasar tentang jenis-jenis kerusakan kontainer dan prosedur perbaikannya sesuai standar industri.",
+  "iicl": "Memahami standar perbaikan kontainer berstandar internasional berdasarkan pedoman Institute of Container Lessors (IICL).",
+  "safety operation and mechanical awareness (soma) ertg": "Meningkatkan pemahaman keselamatan dan prinsip dasar mekanikal pada pengoperasian alat berat ERTG.",
+  "maintenance management": "Meningkatkan kemampuan mengelola kegiatan pemeliharaan alat berat secara sistematis, terencana, dan cost-efficient.",
+  "order management": "Memahami proses order management (TMS) mulai dari penerimaan sampai dengan penyelesaian order dan validasi.",
+  "claim handling": "Memahami proses penanganan claim muatan mulai dari kejadian, investigasi, pengumpulan data hingga penyelesaian.",
+  "driver performance & evaluation": "Memahami standard operasional untuk dapat memberikan penilaian kinerja dan evaluasi komprehensif bagi driver.",
+  "profitability analysis (route classification)": "Memahami cara menganalisa profitabilitas per rute secara presisi untuk optimalisasi marjin operasi Trucking.",
+  "tyre management": "Memahami pengelolaan ban truk/alat berat mulai dari pengadaan, penyimpanan, perawatan, hingga proses disposal.",
+
+  // Corporate (Finance, HRD, IT, BPM, Legal)
+  "business process management framework": "Understanding the BPM lifecycle and its strategic role in driving operational improvements and standardization.",
+  "customer centric in shipping business": "Aligning shipping services and processes with customer needs to enhance satisfaction and loyalty in a competitive market.",
+  "project management": "Knowledge of project lifecycle stages and techniques for managing time, scope, resources, and risk effectively.",
+  "branding guideline": "Equip participants with a comprehensive understanding of the organization’s brand identity, values, and visual standards.",
+  "crisis communication": "Prepare participants to effectively manage and communicate during organizational crises to protect reputation and trust.",
+  "d365 introduction for new joiner - accounting & reporting": "To give understanding the GL module of Microsoft Dynamics 365 and related Accounting & Reporting functions.",
+  "advance accounting - consolidation": "Obtaining an understanding of principle in consolidation reporting and able to create consolidated financial statements.",
+  "financial proforma analysis": "Ability to understand and grasp Proforma results to identify and prepare strategies that affect better financial outcomes.",
+  "invoice processing": "Understanding of accounts payable concepts (3-way/4-way matching) and resolving invoice discrepancies efficiently.",
+  "credit risk assessment & risk mitigation": "Evaluate customer creditworthiness, enforce credit controls, and optimize policies to balance risk and business growth.",
+  "quality of earnings on ebitda basis": "Project specific strategic growth analysis: Potential Merger/Acquisition and Business Collaboration via financial modeling.",
+  "merumuskan strategi dan kebijakan manajemen sumber daya manusia": "Memahami proses perumusan strategi dan kebijakan SDM yang selaras dan mampu mendorong pencapaian tujuan bisnis perusahaan.",
+  "hr budgeting": "Mampu menyusun dan memantau anggaran SDM yang efektif dan efisien berdasarkan data dan proyeksi kebutuhan organisasi.",
+  "menyusun uraian jabatan": "Mampu menyusun job description secara sistematis dan sesuai standar untuk mendukung tata kelola manajemen SDM.",
+  "menyusun standar operasional prosedur (sop)": "Dapat menyusun SOP operasional rekrutmen/HR yang efektif dan efisien sebagai pedoman dan standar kerja baku.",
+  "mengelola program suksesi": "Mampu menyusun dan mengelola program suksesi (Succession Planning) untuk memastikan keberlanjutan kepemimpinan organisasi.",
+  "agile - scrum introduction": "Apply Scrum principles, roles, events, and artifacts to participate effectively in agile ceremonies and sprint deliveries.",
+  "it audit review (cisa)": "Analyze IT controls against CISA domains, identify potential control deficiencies, and gather audit evidence for compliance.",
+  "programming languages : python": "Develop, test, and debug moderately complex Python applications/scripts, applying OOP principles and API integrations.",
+  "penetration testing": "Understanding penetration testing methodology and standards. Creating proactive penetration testing procedures and responses.",
+  "corporate law & company secretarial": "Understanding BoD/BoC mechanisms, corporate actions, and statutory filings required by corporate law.",
+  "privacy & data protection": "GDPR/PDP fundamentals; DPIA, cross-border data transfer, vendor clauses, incident response, and breach protocols.",
+  "strategic sourcing": "Developing advanced strategies to source goods/services efficiently from the best suppliers while optimizing costs.",
+  "request for quotation & purchase order": "Mastering the RFQ functionality to request competitive bids and effectively generating POs within the procurement system."
+};
+
+// ==========================================
+// 3. ENTERPRISE ARCHITECTURE
 // ==========================================
 const SBUS = [
   'Asset Charter', 'Drybulk', 'Liner Commercial', 'Liner International',
@@ -135,7 +253,7 @@ const INITIAL_CATEGORY_DESCRIPTIONS = {
 };
 
 // ==========================================
-// 3. INTELLIGENT COMPRESSED DATA ENGINE
+// 4. INTELLIGENT COMPRESSED DATA ENGINE
 // ==========================================
 const TAG_MAPPING = {
   ALL: ALL_UNITS,
@@ -168,8 +286,8 @@ function buildSeed(category, dataString, source) {
   });
 
   return topics.map((topic) => {
-    let track = 'Intermediate';
-    let funcType = 'Operations'; // Default Fallback
+    let track = 'Intermediate'; 
+    let funcType = 'Operations'; 
 
     const t = topic.toLowerCase();
     const c = category.toLowerCase();
@@ -177,17 +295,13 @@ function buildSeed(category, dataString, source) {
     const combined = `${c} ${t} ${s_lower}`;
     
     // LEVEL CLASSIFICATION
-    const advanceKeywords = ['advance', 'strategy', 'budget', 'analytic', 'modeling', 'governance', 'architecture', 'strategic', 'leadership', 'optimization', 'due diligence', 'corporate', 'framework', 'chartering', 'management', 'evaluat', 'design'];
-    const basicKeywords = ['basic', 'introduction', 'induction', 'overview', 'awareness', 'fundamental', 'pengenalan', 'dasar', 'general', 'concept', 'guideline'];
+    const advanceKeywords = ['advance', 'strategic', 'modeling', 'governance', 'due diligence', 'route profitability', 'leadership', 'masterclass', 'expert', 'forecasting', 'optimization'];
+    const basicKeywords = ['basic', 'introduction', 'induction', 'overview', 'awareness', 'fundamental', 'pengenalan', 'dasar', 'general', 'concept', 'guideline', 'understanding', 'memahami', 'mengenal', 'knowledge'];
 
     if (advanceKeywords.some((k) => combined.includes(k))) track = 'Advance';
     else if (basicKeywords.some((k) => combined.includes(k))) track = 'Basic';
 
-    // =========================================================
-    // INTELLIGENT FUNCTION CLASSIFICATION (Ops / Dev / Admin)
-    // =========================================================
-    
-    // 1. DEVELOPMENT (COE / Strategy / Planning / Analytics)
+    // FUNCTION CLASSIFICATION
     const devKeywords = [
       'strategy', 'strategi', 'development', 'pengembangan', 'design', 'desain', 'architecture', 'arsitektur',
       'planning', 'perencanaan', 'analytic', 'analisa', 'analysis', 'research', 'riset',
@@ -199,7 +313,6 @@ function buildSeed(category, dataString, source) {
       'pnl analysis', 'competitor', 'cost control', 'cost analysis'
     ];
 
-    // 2. ADMINISTRATION (Support / Data / HR Service / Finance / Legal)
     const adminKeywords = [
       'admin', 'administrasi', 'finance', 'financial', 'tax', 'pajak', 'pph', 'reporting', 'laporan',
       'legal', 'hukum', 'governance', 'compliance', 'kepatuhan', 'audit', 'iso', 'qshe', 'hse',
@@ -210,76 +323,55 @@ function buildSeed(category, dataString, source) {
       'petty cash', 'reconciliation', 'rekonsiliasi', 'dso', 'dpo', 'legalitas', 'secretary', 'regulation', 'regulasi'
     ];
 
-    // Base Logic (Dev wins over Admin, Admin wins over Ops)
-    if (devKeywords.some(k => combined.includes(k))) {
-        funcType = 'Development';
-    } else if (adminKeywords.some(k => combined.includes(k))) {
-        funcType = 'Administration';
-    }
+    if (devKeywords.some(k => combined.includes(k))) funcType = 'Development';
+    else if (adminKeywords.some(k => combined.includes(k))) funcType = 'Administration';
 
-    // --- DEPARTMENT SPECIFIC OVERRIDES (HR Analogy) ---
-    
-    // HRD & Corporate
     if (source === 'HRD') {
-      if (t.includes('merumuskan') || t.includes('menyusun') || t.includes('merancang') || t.includes('talent') || t.includes('suksesi') || t.includes('competency') || t.includes('evaluasi') || t.includes('design')) {
-        funcType = 'Development'; // COE
-      } else if (t.includes('administrasi') || t.includes('payroll') || t.includes('tax') || t.includes('bpjs') || t.includes('jaminan sosial') || t.includes('data') || t.includes('perjalanan')) {
-        funcType = 'Administration'; // HR Service Support
-      } else {
-        funcType = 'Operations'; // HRBP / Daily Employee Relation
-      }
+      if (t.includes('merumuskan') || t.includes('menyusun') || t.includes('merancang') || t.includes('talent') || t.includes('suksesi') || t.includes('competency') || t.includes('evaluasi') || t.includes('design')) funcType = 'Development';
+      else if (t.includes('administrasi') || t.includes('payroll') || t.includes('tax') || t.includes('bpjs') || t.includes('jaminan sosial') || t.includes('data') || t.includes('perjalanan')) funcType = 'Administration';
+      else funcType = 'Operations';
     }
-
-    // IT
     if (source === 'IT') {
-      if (c.includes('support') || t.includes('support') || t.includes('troubleshoot') || t.includes('monitoring') || t.includes('incident')) {
-        funcType = 'Operations'; // Helpdesk / IT Ops
-      } else if (t.includes('audit') || t.includes('policy') || t.includes('governance') || t.includes('management system') || t.includes('cisa')) {
-        funcType = 'Administration'; // IT Governance
-      } else {
-        funcType = 'Development'; // Programming, Architecture, UX
-      }
+      if (c.includes('support') || t.includes('support') || t.includes('troubleshoot') || t.includes('monitoring') || t.includes('incident')) funcType = 'Operations';
+      else if (t.includes('audit') || t.includes('policy') || t.includes('governance') || t.includes('management system') || t.includes('cisa')) funcType = 'Administration';
+      else funcType = 'Development';
     }
-
-    // Back Office (Finance, Legal, Internal Audit, Procurement)
     if (['Finance', 'Legal', 'Internal Audit', 'Procurement', 'Procurement MSM'].includes(source)) {
-      if (t.includes('analysis') || t.includes('strategy') || t.includes('budgeting') || t.includes('forecasting') || t.includes('business acumen') || t.includes('feasibility') || t.includes('sourcing')) {
-        funcType = 'Development'; // Strategic Finance/Procurement
-      } else {
-        funcType = 'Administration'; // Daily processing, AP/AR, documentation
-      }
+      if (t.includes('analysis') || t.includes('strategy') || t.includes('budgeting') || t.includes('forecasting') || t.includes('business acumen') || t.includes('feasibility') || t.includes('sourcing')) funcType = 'Development';
+      else funcType = 'Administration';
     }
-
-    // CorpCom & BPM
     if (source === 'CorpCom') {
-      if (t.includes('event') || t.includes('photographic') || t.includes('videography')) {
-        funcType = 'Operations';
-      } else {
-        funcType = 'Development'; // Strategy, Branding, Campaigns
-      }
+      if (t.includes('event') || t.includes('photographic') || t.includes('videography')) funcType = 'Operations';
+      else funcType = 'Development';
     }
     if (source === 'BPM') {
       if (t.includes('sikap') || t.includes('report')) funcType = 'Administration';
-      else funcType = 'Development'; // Framework, Change Management
+      else funcType = 'Development';
     }
 
-    // Explicit Frontline Operation Override (Forces physical/daily execution to Ops)
     const strictOps = ['handling', 'inspection', 'inspeksi', 'bongkar muat', 'maintenance', 'repair', 'stevedoring', 'soma', 'equipment', 'driver', 'trucking knowledge', 'sales activity', 'vessel operation', 'port info'];
     if (strictOps.some(k => t.includes(k))) {
-      // Don't override if it's explicitly an IT system or Back Office process
-      if (!['IT', 'Finance', 'Legal', 'HRD'].includes(source)) {
-        funcType = 'Operations';
-      }
+      if (!['IT', 'Finance', 'Legal', 'HRD'].includes(source)) funcType = 'Operations';
     }
+
+    // CHECK IF EXISTING IN DB
+    const cleanT = t.replace(/[^a-z0-9]/g, '');
+    const isExt = (cleanT.length > 3 && EXISTING_CLEANED.some(m => m.includes(cleanT) || cleanT.includes(m))) ? 'Yes' : 'No';
+    
+    // FETCH DESCRIPTION DICTIONARY
+    const defaultDesc = `Comprehensive learning module covering standard practices, operational guidelines, and strategic applications for ${topic.toUpperCase()} within the ${category} domain.`;
+    const descObj = TOPIC_OBJECTIVES[t] || defaultDesc;
 
     return {
       id: crypto.randomUUID(),
       c: category,
       t: topic.trim(),
+      desc: descObj,
       lvl: track,
       s: source,
       tg: Array.from(targets),
       func: funcType, 
+      isExt: isExt,
     };
   });
 }
@@ -340,7 +432,7 @@ const deduplicateSeedData = (data) => {
 const DEFAULT_TOPICS = deduplicateSeedData(seedRawData);
 
 // ==========================================
-// 4. UI COMPONENTS
+// 5. UI COMPONENTS
 // ==========================================
 const MultiSelectDropdown = ({ title, options, selectedOptions, setSelectedOptions, icon: Icon }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -415,7 +507,7 @@ const MultiSelectDropdown = ({ title, options, selectedOptions, setSelectedOptio
 };
 
 // ==========================================
-// 5. MAIN DASHBOARD COMPONENT
+// 6. MAIN DASHBOARD COMPONENT
 // ==========================================
 export default function App() {
   const [activeTab, setActiveTab] = useState('matrix');
@@ -425,6 +517,21 @@ export default function App() {
   const [selectedLevels, setSelectedLevels] = useState([]);
   const [selectedSources, setSelectedSources] = useState([]);
   const [selectedFunctions, setSelectedFunctions] = useState([]); 
+  const [selectedExisting, setSelectedExisting] = useState([]); 
+
+  // Column Visibility State
+  const [hiddenCols, setHiddenCols] = useState([]);
+  const [showColMenu, setShowColMenu] = useState(false);
+  const colMenuRef = useRef(null);
+
+  const MAIN_COLS = [
+    { key: 'c', label: 'Category' },
+    { key: 't', label: 'Training Topic' },
+    { key: 'lvl', label: 'Difficulty' },
+    { key: 'func', label: 'Function' },
+    { key: 'isExt', label: 'Existing?' },
+    { key: 's', label: 'Originated By' },
+  ];
 
   const [matrixSort, setMatrixSort] = useState({ key: 'c', dir: 'asc' });
   const [summarySort, setSummarySort] = useState({ key: 'category', dir: 'asc' });
@@ -467,8 +574,8 @@ export default function App() {
   useEffect(() => {
     if (!user || !db) return;
 
-    // CHANGED TO v3 TO FORCE RE-SEED WITH NEW LOGIC
-    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'matrixData', 'mainDoc_v3');
+    // V7 forces re-seed with NEW Detailed Descriptions and Corrected Logic
+    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'matrixData', 'mainDoc_v7');
     const unsubscribe = onSnapshot(
       docRef,
       (snap) => {
@@ -503,6 +610,15 @@ export default function App() {
     }
   }, [categoryToManage, catManagerTab, categoryDetails, topics]);
 
+  // Click outside for column menu
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (colMenuRef.current && !colMenuRef.current.contains(e.target)) setShowColMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const ALL_CATEGORIES = useMemo(() => {
     const cats = new Set(topics.map((d) => d.c));
     Object.keys(categoryDetails).forEach((c) => cats.add(c));
@@ -511,6 +627,7 @@ export default function App() {
 
   const ALL_LEVELS = ['Basic', 'Intermediate', 'Advance'];
   const ALL_FUNCTIONS = ['Operations', 'Development', 'Administration'];
+  const ALL_EXISTING_OPTS = ['Yes', 'No'];
   const levelWeight = { Basic: 1, Intermediate: 2, Advance: 3 };
 
   const ALL_SOURCES = useMemo(() => {
@@ -536,7 +653,7 @@ export default function App() {
   const syncToCloud = async (newTopics, newCatDetails) => {
     if (!db) return;
     try {
-      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'matrixData', 'mainDoc_v3'), {
+      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'matrixData', 'mainDoc_v7'), {
         topics: newTopics,
         categoryDetails: newCatDetails,
       });
@@ -636,6 +753,10 @@ export default function App() {
     syncToCloud(newTopics, newDetails);
   };
 
+  const toggleHiddenCol = (colKey) => {
+    setHiddenCols(prev => prev.includes(colKey) ? prev.filter(c => c !== colKey) : [...prev, colKey]);
+  };
+
   // ----------------------------------------
   // Filtering & Sorting Logic
   // ----------------------------------------
@@ -652,37 +773,26 @@ export default function App() {
       const matchTarget = selectedTargets.length === 0 || item.tg.some((t) => selectedTargets.includes(t));
       const matchSource = selectedSources.length === 0 || item.s.split(', ').some((s) => selectedSources.includes(s.trim()));
       const matchFunction = selectedFunctions.length === 0 || selectedFunctions.includes(item.func);
+      const matchExisting = selectedExisting.length === 0 || selectedExisting.includes(item.isExt);
 
-      return matchSearch && matchCategory && matchLevel && matchTarget && matchSource && matchFunction;
+      return matchSearch && matchCategory && matchLevel && matchTarget && matchSource && matchFunction && matchExisting;
     });
-  }, [topics, searchTerm, selectedCategories, selectedLevels, selectedTargets, selectedSources, selectedFunctions]);
+  }, [topics, searchTerm, selectedCategories, selectedLevels, selectedTargets, selectedSources, selectedFunctions, selectedExisting]);
 
-  // FIXED: Explicit sorting logic handling 'func' as a string
   const sortedFilteredData = useMemo(() => {
     let sortableItems = [...filteredData];
     sortableItems.sort((a, b) => {
-      // 1. Sort by Category
       if (matrixSort.key === 'c') {
         const catCompare = a.c.localeCompare(b.c);
         if (catCompare !== 0) return matrixSort.dir === 'asc' ? catCompare : -catCompare;
         return (levelWeight[a.lvl] || 2) - (levelWeight[b.lvl] || 2);
       }
-      // 2. Sort by Level
       if (matrixSort.key === 'lvl') {
         return matrixSort.dir === 'asc'
           ? (levelWeight[a.lvl] || 2) - (levelWeight[b.lvl] || 2)
           : (levelWeight[b.lvl] || 2) - (levelWeight[a.lvl] || 2);
       }
-      // 3. Sort by Function explicitly
-      if (matrixSort.key === 'func') {
-        const funcA = a.func || '';
-        const funcB = b.func || '';
-        const funcCompare = funcA.localeCompare(funcB);
-        if (funcCompare !== 0) return matrixSort.dir === 'asc' ? funcCompare : -funcCompare;
-        return a.t.localeCompare(b.t); // Secondary sort by topic name
-      }
 
-      // Universal String Sorting Fallback
       let aVal = a[matrixSort.key] || '';
       let bVal = b[matrixSort.key] || '';
       
@@ -766,6 +876,77 @@ export default function App() {
     });
   });
 
+  const visibleColCount = (isAdmin ? 1 : 0) + MAIN_COLS.filter(c => !hiddenCols.includes(c.key)).length + DEPT_INFO.filter(d => !hiddenCols.includes(d.abbr)).length;
+
+  // ----------------------------------------
+  // EXCEL EXPORT LOGIC
+  // ----------------------------------------
+  const handleExportExcel = () => {
+    let tableHtml = `
+      <html xmlns:x="urn:schemas-microsoft-com:office:excel">
+        <head>
+          <meta charset="utf-8">
+          <style>
+            table { border-collapse: collapse; font-family: Arial, sans-serif; }
+            th { background-color: #1e3a8a; color: white; padding: 12px; border: 1px solid #cbd5e1; text-align: left; font-size: 14px; }
+            td { padding: 10px; border: 1px solid #cbd5e1; vertical-align: top; font-size: 13px; }
+            .y-cell { background-color: #dcfce7; color: #166534; text-align: center; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Training Topic</th>
+                <th>Description / Objective</th>
+                <th>Difficulty</th>
+                <th>Function</th>
+                <th>Existing Module?</th>
+                <th>Originated By</th>`;
+
+    DEPT_INFO.forEach(dept => {
+      tableHtml += `<th>${dept.abbr} (${dept.type})</th>`;
+    });
+
+    tableHtml += `</tr></thead><tbody>`;
+
+    sortedFilteredData.forEach(row => {
+      const escapeHtml = (unsafe) => {
+        if (!unsafe) return '';
+        return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+      };
+
+      tableHtml += `<tr>
+        <td>${escapeHtml(row.c)}</td>
+        <td><b>${escapeHtml(row.t)}</b></td>
+        <td>${escapeHtml(row.desc)}</td>
+        <td>${escapeHtml(row.lvl)}</td>
+        <td>${escapeHtml(row.func)}</td>
+        <td>${escapeHtml(row.isExt)}</td>
+        <td>${escapeHtml(row.s)}</td>`;
+
+      DEPT_INFO.forEach(dept => {
+        const isApp = row.tg.includes(dept.full);
+        tableHtml += `<td class="${isApp ? 'y-cell' : ''}">${isApp ? 'Y' : ''}</td>`;
+      });
+
+      tableHtml += `</tr>`;
+    });
+
+    tableHtml += `</tbody></table></body></html>`;
+
+    const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Meratus_Skill_Matrix_Export.xls';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-12">
       {/* HEADER */}
@@ -824,7 +1005,7 @@ export default function App() {
 
       <main className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* DASHBOARD METRICS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 relative z-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8 relative z-0">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center space-x-4 transition hover:shadow-md">
             <div className="bg-blue-100 p-3 rounded-full">
               <BookOpen className="h-6 w-6 text-blue-600" />
@@ -836,6 +1017,19 @@ export default function App() {
               </p>
             </div>
           </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center space-x-4 transition hover:shadow-md">
+            <div className="bg-teal-100 p-3 rounded-full">
+              <CheckCircle className="h-6 w-6 text-teal-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Module Coverage</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {filteredData.filter(t => t.isExt === 'Yes').length} <span className="text-xs font-normal text-gray-400">/ {filteredData.length}</span>
+              </p>
+            </div>
+          </div>
+
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center space-x-4 transition hover:shadow-md">
             <div className="bg-green-100 p-3 rounded-full">
               <ShieldCheck className="h-6 w-6 text-green-600" />
@@ -845,17 +1039,13 @@ export default function App() {
               <p className="text-2xl font-bold text-gray-900">{ALL_CATEGORIES.length}</p>
             </div>
           </div>
+
           {isAdmin ? (
             <div className="grid grid-cols-2 gap-2">
               <div
                 onClick={() =>
                   setEditingTopic({
-                    t: '',
-                    c: ALL_CATEGORIES[0] || 'New Category',
-                    lvl: 'Intermediate',
-                    s: 'Admin',
-                    tg: [],
-                    func: 'Operations', // New default function
+                    t: '', c: ALL_CATEGORIES[0] || 'New Category', desc: '', lvl: 'Intermediate', s: 'Admin', tg: [], func: 'Operations', isExt: 'No'
                   })
                 }
                 className="bg-blue-600 hover:bg-blue-700 cursor-pointer rounded-xl shadow-sm p-3 flex flex-col items-center justify-center transition hover:shadow-md group"
@@ -882,12 +1072,13 @@ export default function App() {
               </div>
             </div>
           )}
+
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center space-x-4 transition hover:shadow-md">
             <div className="bg-orange-100 p-3 rounded-full">
               <Users className="h-6 w-6 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Target Departments</p>
+              <p className="text-sm font-medium text-gray-500">Target Depts</p>
               <p className="text-2xl font-bold text-gray-900">25</p>
             </div>
           </div>
@@ -900,18 +1091,16 @@ export default function App() {
           <>
             {/* CONTROLS / FILTERS */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6 relative z-30">
-              <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+              {/* HEADER ACTION BAR - FIXED LAYOUT */}
+              <div className="flex flex-wrap items-center justify-between mb-4 border-b border-gray-100 pb-3 gap-3">
                 <div className="flex items-center space-x-2">
                   <Filter className="h-5 w-5 text-gray-500" />
                   <h2 className="text-lg font-semibold text-gray-700">Refine Matrix</h2>
                 </div>
-                <div className="flex items-center space-x-4">
-                  {(selectedTargets.length > 0 ||
-                    selectedCategories.length > 0 ||
-                    selectedLevels.length > 0 ||
-                    selectedSources.length > 0 ||
-                    selectedFunctions.length > 0 ||
-                    searchTerm) && (
+                
+                {/* BUTTONS (RESET, EXCEL, & COLUMN MANAGER) */}
+                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                  {(selectedTargets.length > 0 || selectedCategories.length > 0 || selectedLevels.length > 0 || selectedSources.length > 0 || selectedFunctions.length > 0 || selectedExisting.length > 0 || searchTerm) && (
                     <button
                       onClick={() => {
                         setSearchTerm('');
@@ -920,20 +1109,76 @@ export default function App() {
                         setSelectedLevels([]);
                         setSelectedSources([]);
                         setSelectedFunctions([]);
+                        setSelectedExisting([]);
                       }}
-                      className="text-xs text-red-600 hover:text-red-700 font-medium flex items-center"
+                      className="text-xs text-red-600 hover:text-red-700 font-bold flex items-center bg-red-50 hover:bg-red-100 py-1.5 px-3 rounded-md transition whitespace-nowrap"
                     >
-                      <FilterX className="w-3 h-3 mr-1" /> Reset Filters
+                      <FilterX className="w-3.5 h-3.5 mr-1" /> Reset
                     </button>
                   )}
-                  <div className="flex items-center text-xs font-medium text-blue-600 bg-blue-50 py-1.5 px-3 rounded-full border border-blue-100">
-                    <Info className="h-4 w-4 mr-1.5" /> Scroll table right to view all 25 SBU/SFU columns
+
+                  <button
+                    onClick={handleExportExcel}
+                    className="flex items-center text-xs font-bold text-emerald-700 bg-emerald-50 py-1.5 px-3 rounded-md border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition shadow-sm whitespace-nowrap"
+                  >
+                    <Download className="h-3.5 w-3.5 mr-1.5 text-emerald-600" /> Export Excel
+                  </button>
+                  
+                  {/* COLUMN MANAGER UI */}
+                  <div className="relative" ref={colMenuRef}>
+                    <button
+                      onClick={() => setShowColMenu(!showColMenu)}
+                      className="flex items-center text-xs font-bold text-gray-700 bg-white py-1.5 px-3 rounded-md border border-gray-300 hover:bg-gray-50 transition shadow-sm whitespace-nowrap"
+                    >
+                      <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5 text-gray-500" /> Columns
+                    </button>
+                    {showColMenu && (
+                      <div className="absolute right-0 top-full mt-2 w-[420px] bg-white border border-gray-200 rounded-xl shadow-2xl z-[100] p-5 max-h-[85vh] flex flex-col">
+                        <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4 flex-shrink-0">
+                          <span className="font-bold text-sm text-gray-800 flex items-center">
+                            <SlidersHorizontal className="w-4 h-4 mr-2 text-gray-500" />
+                            Customize Columns
+                          </span>
+                          <div className="space-x-2">
+                             <button onClick={() => setHiddenCols([...MAIN_COLS.map(c=>c.key), ...DEPT_INFO.map(d=>d.abbr)])} className="text-[10px] text-red-600 hover:bg-red-50 hover:text-red-700 font-bold px-2.5 py-1.5 rounded-md transition-colors">
+                                Hide All
+                             </button>
+                             <button onClick={() => setHiddenCols([])} className="text-[10px] text-blue-600 hover:text-blue-800 font-bold bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-md transition-colors">
+                                Show All
+                             </button>
+                          </div>
+                        </div>
+                        
+                        <div className="overflow-y-auto custom-scrollbar pr-2">
+                            <div className="font-bold text-[10px] mb-3 text-gray-400 uppercase tracking-wider">Main Information</div>
+                            {/* FIXED: Changed from Grid-cols-2 to flex-col single list to prevent overlapping text */}
+                            <div className="flex flex-col gap-2 mb-5">
+                              {MAIN_COLS.map(col => (
+                                <label key={col.key} className="flex items-center space-x-3 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-2 rounded-lg border border-transparent hover:border-gray-100 transition-colors w-full">
+                                  <input type="checkbox" checked={!hiddenCols.includes(col.key)} onChange={() => toggleHiddenCol(col.key)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4 flex-shrink-0" />
+                                  <span className="font-medium whitespace-normal leading-tight">{col.label}</span>
+                                </label>
+                              ))}
+                            </div>
+
+                            <div className="font-bold text-[10px] mb-3 text-gray-400 uppercase tracking-wider border-t border-gray-100 pt-4">Departments (SBU/SFU)</div>
+                            <div className="grid grid-cols-4 gap-2">
+                              {DEPT_INFO.map(dept => (
+                                <label key={dept.abbr} className="flex items-center space-x-2 text-xs text-gray-600 cursor-pointer hover:bg-gray-50 p-1.5 rounded-lg border border-transparent hover:border-gray-100 transition-colors">
+                                  <input type="checkbox" checked={!hiddenCols.includes(dept.abbr)} onChange={() => toggleHiddenCol(dept.abbr)} className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 w-3.5 h-3.5 flex-shrink-0" />
+                                  <span className="truncate font-medium" title={dept.full}>{dept.abbr}</span>
+                                </label>
+                              ))}
+                            </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                <div className="relative">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+                <div className="relative xl:col-span-1 lg:col-span-2 sm:col-span-2">
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
                     Search Keywords
                   </label>
@@ -950,6 +1195,7 @@ export default function App() {
                 </div>
 
                 <MultiSelectDropdown title="Job Function" options={ALL_FUNCTIONS} selectedOptions={selectedFunctions} setSelectedOptions={setSelectedFunctions} icon={Briefcase} />
+                <MultiSelectDropdown title="Existing Module" options={ALL_EXISTING_OPTS} selectedOptions={selectedExisting} setSelectedOptions={setSelectedExisting} icon={HelpCircle} />
                 <MultiSelectDropdown title="Applicable To" options={ALL_UNITS} selectedOptions={selectedTargets} setSelectedOptions={setSelectedTargets} icon={Target} />
                 <MultiSelectDropdown title="Skill Category" options={ALL_CATEGORIES} selectedOptions={selectedCategories} setSelectedOptions={setSelectedCategories} icon={LayoutDashboard} />
                 <MultiSelectDropdown title="Difficulty" options={ALL_LEVELS} selectedOptions={selectedLevels} setSelectedOptions={setSelectedLevels} icon={GraduationCap} />
@@ -957,7 +1203,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* 25-COLUMN DATA TABLE */}
+            {/* DATA TABLE */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative z-0">
               <div className="overflow-x-auto custom-scrollbar max-h-[800px] overflow-y-auto relative">
                 <table className="min-w-max w-full divide-y divide-gray-200">
@@ -966,65 +1212,64 @@ export default function App() {
                       {isAdmin && (
                         <th className="sticky top-0 left-0 bg-slate-100 z-[45] px-3 w-16 border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb]"></th>
                       )}
-                      <th
-                        onClick={() => handleMatrixSort('c')}
-                        className={`sticky top-0 ${
-                          isAdmin ? 'left-[64px]' : 'left-0'
-                        } bg-slate-100 z-40 px-5 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb] cursor-pointer hover:bg-slate-200 transition-colors`}
-                        style={{ width: '280px', minWidth: '280px' }}
-                      >
-                        Category {getSortIcon(matrixSort, 'c')}
-                      </th>
-                      <th
-                        onClick={() => handleMatrixSort('t')}
-                        className="sticky top-0 bg-slate-100 z-40 px-5 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)] cursor-pointer hover:bg-slate-200 transition-colors"
-                        style={{ left: isAdmin ? '344px' : '280px', width: '400px', minWidth: '400px' }}
-                      >
-                        Training Topic {getSortIcon(matrixSort, 't')}
-                      </th>
-                      <th
-                        onClick={() => handleMatrixSort('lvl')}
-                        className="sticky top-0 bg-slate-100 z-30 px-5 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 w-32 cursor-pointer hover:bg-slate-200 transition-colors"
-                      >
-                        Difficulty {getSortIcon(matrixSort, 'lvl')}
-                      </th>
                       
-                      <th
-                        onClick={() => handleMatrixSort('func')}
-                        className="sticky top-0 bg-slate-100 z-30 px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 w-40 cursor-pointer hover:bg-slate-200 transition-colors"
-                      >
-                        Function {getSortIcon(matrixSort, 'func')}
-                      </th>
+                      {!hiddenCols.includes('c') && (
+                        <th
+                          onClick={() => handleMatrixSort('c')}
+                          className={`sticky top-0 ${isAdmin ? 'left-[64px]' : 'left-0'} bg-slate-100 z-40 px-5 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb] cursor-pointer hover:bg-slate-200 transition-colors`}
+                          style={{ width: '280px', minWidth: '280px' }}
+                        >
+                          Category {getSortIcon(matrixSort, 'c')}
+                        </th>
+                      )}
 
-                      <th
-                        onClick={() => handleMatrixSort('s')}
-                        className="sticky top-0 bg-slate-100 z-30 px-5 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-48 cursor-pointer hover:bg-slate-200 transition-colors"
-                      >
-                        Originated By {getSortIcon(matrixSort, 's')}
-                      </th>
+                      {!hiddenCols.includes('t') && (
+                        <th
+                          onClick={() => handleMatrixSort('t')}
+                          className={`sticky top-0 bg-slate-100 z-40 px-5 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 ${!hiddenCols.includes('c') ? 'shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]' : ''} cursor-pointer hover:bg-slate-200 transition-colors`}
+                          style={{ left: !hiddenCols.includes('c') ? (isAdmin ? '344px' : '280px') : (isAdmin ? '64px' : '0px'), width: '380px', minWidth: '380px' }}
+                        >
+                          Training Topic {getSortIcon(matrixSort, 't')}
+                        </th>
+                      )}
+
+                      {!hiddenCols.includes('lvl') && (
+                        <th onClick={() => handleMatrixSort('lvl')} className="sticky top-0 bg-slate-100 z-30 px-5 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 w-32 cursor-pointer hover:bg-slate-200 transition-colors">
+                          Difficulty {getSortIcon(matrixSort, 'lvl')}
+                        </th>
+                      )}
+
+                      {!hiddenCols.includes('func') && (
+                        <th onClick={() => handleMatrixSort('func')} className="sticky top-0 bg-slate-100 z-30 px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 w-36 cursor-pointer hover:bg-slate-200 transition-colors">
+                          Function {getSortIcon(matrixSort, 'func')}
+                        </th>
+                      )}
+
+                      {!hiddenCols.includes('isExt') && (
+                        <th onClick={() => handleMatrixSort('isExt')} className="sticky top-0 bg-slate-100 z-30 px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 w-24 cursor-pointer hover:bg-slate-200 transition-colors">
+                          Existing? {getSortIcon(matrixSort, 'isExt')}
+                        </th>
+                      )}
+
+                      {!hiddenCols.includes('s') && (
+                        <th onClick={() => handleMatrixSort('s')} className="sticky top-0 bg-slate-100 z-30 px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-44 cursor-pointer hover:bg-slate-200 transition-colors">
+                          Originated By {getSortIcon(matrixSort, 's')}
+                        </th>
+                      )}
 
                       {DEPT_INFO.map((dept) => (
-                        <th
-                          key={dept.abbr}
-                          title={dept.full}
-                          className="sticky top-0 bg-slate-100 z-30 px-2 py-3 text-center border-r border-gray-200 w-16"
-                        >
-                          <div className="flex flex-col items-center justify-center space-y-1.5">
-                            <span
-                              className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide ${
-                                dept.type === 'SBU' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                              }`}
-                            >
-                              {dept.type}
-                            </span>
-                            <span
-                              className="text-[11px] font-extrabold text-gray-800"
-                              style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', height: '60px' }}
-                            >
-                              {dept.abbr}
-                            </span>
-                          </div>
-                        </th>
+                        !hiddenCols.includes(dept.abbr) && (
+                          <th key={dept.abbr} title={dept.full} className="sticky top-0 bg-slate-100 z-30 px-2 py-3 text-center border-r border-gray-200 w-16">
+                            <div className="flex flex-col items-center justify-center space-y-1.5">
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide ${dept.type === 'SBU' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+                                {dept.type}
+                              </span>
+                              <span className="text-[11px] font-extrabold text-gray-800" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', height: '60px' }}>
+                                {dept.abbr}
+                              </span>
+                            </div>
+                          </th>
+                        )
                       ))}
                     </tr>
                   </thead>
@@ -1036,102 +1281,87 @@ export default function App() {
                           {isAdmin && (
                             <td className="sticky left-0 bg-white group-hover:bg-blue-50 z-20 px-2 py-4 align-top border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb] w-16 text-center">
                               <div className="flex justify-center space-x-1">
-                                <button
-                                  onClick={() => setEditingTopic(row)}
-                                  className="text-gray-400 hover:text-blue-600 transition p-1 rounded hover:bg-blue-100"
-                                  title="Edit Topic"
-                                >
+                                <button onClick={() => setEditingTopic(row)} className="text-gray-400 hover:text-blue-600 transition p-1 rounded hover:bg-blue-100" title="Edit Topic">
                                   <Edit className="w-4 h-4" />
                                 </button>
-                                <button
-                                  onClick={() => deleteTopic(row.id)}
-                                  className="text-gray-400 hover:text-red-600 transition p-1 rounded hover:bg-red-100"
-                                  title="Delete Topic"
-                                >
+                                <button onClick={() => deleteTopic(row.id)} className="text-gray-400 hover:text-red-600 transition p-1 rounded hover:bg-red-100" title="Delete Topic">
                                   <Trash2 className="w-4 h-4" />
                                 </button>
                               </div>
                             </td>
                           )}
 
-                          <td
-                            className={`sticky ${
-                              isAdmin ? 'left-[64px]' : 'left-0'
-                            } bg-white group-hover:bg-blue-50 z-20 px-5 py-4 align-top border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb] cursor-pointer hover:bg-blue-100 transition`}
-                            style={{ width: '280px', minWidth: '280px' }}
-                            onClick={() => setViewingCategory(row.c)}
-                          >
-                            <div className="flex flex-col items-start gap-1">
-                              <span className="text-[13px] font-bold text-blue-900 leading-snug hover:underline decoration-blue-300 underline-offset-2">
-                                {row.c}
-                              </span>
-                              <span className="text-[10px] text-gray-500 font-medium flex items-center">
-                                <Info className="w-3 h-3 mr-1" /> View Details
-                              </span>
-                            </div>
-                          </td>
-
-                          <td
-                            className="sticky bg-white group-hover:bg-blue-50 z-20 px-5 py-4 align-top border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]"
-                            style={{ left: isAdmin ? '344px' : '280px', width: '400px', minWidth: '400px' }}
-                          >
-                            <span className="text-[13px] font-semibold text-gray-800 leading-snug">{row.t}</span>
-                          </td>
-
-                          <td className="px-5 py-4 text-xs text-gray-700 align-top border-r border-gray-200">
-                            <span
-                              className={`inline-flex items-center px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border ${
-                                row.lvl === 'Advance'
-                                  ? 'bg-red-50 text-red-700 border-red-200'
-                                  : row.lvl === 'Intermediate'
-                                  ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                  : 'bg-green-50 text-green-700 border-green-200'
-                              }`}
+                          {!hiddenCols.includes('c') && (
+                            <td
+                              className={`sticky ${isAdmin ? 'left-[64px]' : 'left-0'} bg-white group-hover:bg-blue-50 z-20 px-5 py-4 align-top border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb] cursor-pointer hover:bg-blue-100 transition`}
+                              style={{ width: '280px', minWidth: '280px' }}
+                              onClick={() => setViewingCategory(row.c)}
                             >
-                              {row.lvl}
-                            </span>
-                          </td>
+                              <div className="flex flex-col items-start gap-1">
+                                <span className="text-[13px] font-bold text-blue-900 leading-snug hover:underline decoration-blue-300 underline-offset-2">{row.c}</span>
+                                <span className="text-[10px] text-gray-500 font-medium flex items-center"><Info className="w-3 h-3 mr-1" /> View Details</span>
+                              </div>
+                            </td>
+                          )}
 
-                          {/* DEDICATED FUNCTION CELL */}
-                          <td className="px-4 py-4 text-xs text-gray-700 align-top border-r border-gray-200">
-                            <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${
-                              row.func === 'Development' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                              row.func === 'Administration' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                              'bg-blue-50 text-blue-700 border-blue-200'
-                            }`}>
-                              <Briefcase className="w-3 h-3 mr-1.5" />
-                              {row.func}
-                            </span>
-                          </td>
+                          {!hiddenCols.includes('t') && (
+                            <td
+                              className={`sticky bg-white group-hover:bg-blue-50 z-20 px-5 py-4 align-top border-r border-gray-200 ${!hiddenCols.includes('c') ? 'shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]' : 'shadow-[1px_0_0_0_#e5e7eb]'}`}
+                              style={{ left: !hiddenCols.includes('c') ? (isAdmin ? '344px' : '280px') : (isAdmin ? '64px' : '0px'), width: '380px', minWidth: '380px' }}
+                            >
+                              <span className="text-[13px] font-semibold text-gray-800 leading-snug block">{row.t}</span>
+                              <span className="text-[10px] text-gray-500 mt-1 line-clamp-2 leading-relaxed" title={row.desc}>{row.desc}</span>
+                            </td>
+                          )}
 
-                          {/* ORIGINATED BY */}
-                          <td className="px-5 py-4 text-[11px] text-gray-500 align-top border-r border-gray-300 font-medium">
-                            {row.s.split(', ').map((source, i) => (
-                              <span key={i} className="inline-block bg-gray-100 px-1.5 py-0.5 rounded mr-1 mb-1 border border-gray-200 text-gray-600">
-                                {source}
+                          {!hiddenCols.includes('lvl') && (
+                            <td className="px-5 py-4 text-xs text-gray-700 align-top border-r border-gray-200">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border ${row.lvl === 'Advance' ? 'bg-red-50 text-red-700 border-red-200' : row.lvl === 'Intermediate' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
+                                {row.lvl}
                               </span>
-                            ))}
-                          </td>
+                            </td>
+                          )}
+
+                          {!hiddenCols.includes('func') && (
+                            <td className="px-4 py-4 text-xs text-gray-700 align-top border-r border-gray-200">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${row.func === 'Development' ? 'bg-purple-50 text-purple-700 border-purple-200' : row.func === 'Administration' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                                <Briefcase className="w-3 h-3 mr-1.5" />{row.func}
+                              </span>
+                            </td>
+                          )}
+
+                          {/* EXISTING COL */}
+                          {!hiddenCols.includes('isExt') && (
+                            <td className="px-4 py-4 text-center align-top border-r border-gray-200">
+                              {row.isExt === 'Yes' ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-800 border border-green-300">
+                                  <Check className="w-3 h-3 mr-1" /> YES
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-gray-100 text-gray-500 border border-gray-200">
+                                  NO
+                                </span>
+                              )}
+                            </td>
+                          )}
+
+                          {!hiddenCols.includes('s') && (
+                            <td className="px-4 py-4 text-[10px] text-gray-500 align-top border-r border-gray-300 font-medium">
+                              {row.s.split(', ').map((source, i) => (
+                                <span key={i} className="inline-block bg-gray-100 px-1.5 py-0.5 rounded mr-1 mb-1 border border-gray-200 text-gray-600">{source}</span>
+                              ))}
+                            </td>
+                          )}
 
                           {DEPT_INFO.map((dept) => {
+                            if (hiddenCols.includes(dept.abbr)) return null;
                             const isApplicable = row.tg.includes(dept.full);
                             return (
-                              <td
-                                key={dept.abbr}
-                                className={`px-2 py-4 text-center align-middle border-r border-gray-100 transition-colors ${
-                                  isApplicable ? 'bg-green-50/40 group-hover:bg-green-100/50' : ''
-                                }`}
-                              >
+                              <td key={dept.abbr} className={`px-2 py-4 text-center align-middle border-r border-gray-100 transition-colors ${isApplicable ? 'bg-green-50/40 group-hover:bg-green-100/50' : ''}`}>
                                 {isApplicable ? (
-                                  <div className="flex justify-center">
-                                    <div className="h-5 w-5 bg-green-500 rounded flex items-center justify-center shadow-sm">
-                                      <Check className="h-3.5 w-3.5 text-white stroke-[3]" />
-                                    </div>
-                                  </div>
+                                  <div className="flex justify-center"><div className="h-5 w-5 bg-green-500 rounded flex items-center justify-center shadow-sm"><Check className="h-3.5 w-3.5 text-white stroke-[3]" /></div></div>
                                 ) : (
-                                  <div className="flex justify-center">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-gray-200"></div>
-                                  </div>
+                                  <div className="flex justify-center"><div className="h-1.5 w-1.5 rounded-full bg-gray-200"></div></div>
                                 )}
                               </td>
                             );
@@ -1140,7 +1370,7 @@ export default function App() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={30} className="px-6 py-16 text-center text-gray-500">
+                        <td colSpan={visibleColCount} className="px-6 py-16 text-center text-gray-500">
                           <div className="flex flex-col items-center justify-center">
                             <Search className="h-10 w-10 text-gray-300 mb-3" />
                             <p className="text-lg font-medium">No training topics found matching your criteria.</p>
@@ -1581,19 +1811,30 @@ export default function App() {
             <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50">
               <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 mb-6">
                 <h4 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider border-b pb-2">Topic Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="md:col-span-2">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="md:col-span-3">
                     <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Training Topic Name</label>
                     <textarea
                       rows="2"
                       value={editingTopic.t}
                       onChange={(e) => setEditingTopic({ ...editingTopic, t: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold"
                       placeholder="e.g., Engine Maintenance Overview"
                     />
                   </div>
+                  
+                  <div className="md:col-span-3">
+                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Topic Description / Objective</label>
+                    <textarea
+                      rows="3"
+                      value={editingTopic.desc || ''}
+                      onChange={(e) => setEditingTopic({ ...editingTopic, desc: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="Enter a brief description or learning objective for this topic..."
+                    />
+                  </div>
 
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Category (Create or Select)</label>
                     <input
                       type="text"
@@ -1609,7 +1850,7 @@ export default function App() {
                     </datalist>
                   </div>
 
-                  <div>
+                  <div className="md:col-span-1">
                     <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Difficulty Level</label>
                     <select
                       value={editingTopic.lvl}
@@ -1644,6 +1885,18 @@ export default function App() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                       placeholder="e.g., Asset Charter, Logistics"
                     />
+                  </div>
+
+                  <div className="md:col-span-1">
+                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Already Exist?</label>
+                    <select
+                      value={editingTopic.isExt || 'No'}
+                      onChange={(e) => setEditingTopic({ ...editingTopic, isExt: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
+                    >
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -1702,6 +1955,7 @@ export default function App() {
           </div>
         </div>
       )}
+
       <style
         dangerouslySetInnerHTML={{
           __html: `
