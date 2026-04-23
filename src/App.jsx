@@ -1702,7 +1702,6 @@ export default function App() {
           </div>
         </div>
       )}
-
       <style
         dangerouslySetInnerHTML={{
           __html: `
