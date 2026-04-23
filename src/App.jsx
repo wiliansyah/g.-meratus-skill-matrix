@@ -958,7 +958,7 @@ export default function App() {
                 <LayoutDashboard className="h-6 w-6 text-blue-900" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">Meratus Enterprise Skill Matrix</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Meratus Skill Matrix Categorization</h1>
                 <p className="text-blue-200 text-sm">Comprehensive L&D Dashboard - Cloud Synced</p>
               </div>
             </div>
