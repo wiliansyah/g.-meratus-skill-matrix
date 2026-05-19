@@ -1,380 +1,237 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
-  Search,
-  Filter,
-  BookOpen,
-  Users,
-  Target,
-  ShieldCheck,
-  LayoutDashboard,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Info,
-  TableProperties,
-  BarChart2,
-  ChevronUp,
-  ChevronDown,
-  CheckSquare,
-  Square,
-  FilterX,
-  Edit,
-  Trash2,
-  Plus,
-  Lock,
-  Unlock,
-  X,
-  FolderEdit,
-  GraduationCap,
-  Save,
-  Briefcase,
-  SlidersHorizontal,
-  CheckCircle,
-  HelpCircle,
-  Download
+  Search, Filter, BookOpen, Users, Target, ShieldCheck, LayoutDashboard,
+  Check, ChevronLeft, ChevronRight, Info, TableProperties, BarChart2,
+  ChevronUp, ChevronDown, CheckSquare, Square, FilterX, Edit, Trash2,
+  Plus, Lock, Unlock, X, Save, Briefcase, SlidersHorizontal, CheckCircle,
+  HelpCircle, Download, Network, Award, GraduationCap
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import {
-  getAuth,
-  signInAnonymously,
-  onAuthStateChanged,
-} from 'firebase/auth';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
-// ==========================================
-// 1. FIREBASE & CLOUD STORAGE SETUP
-// ==========================================
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'YOUR_API_KEY',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'YOUR_AUTH_DOMAIN',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'YOUR_PROJECT_ID',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'YOUR_STORAGE_BUCKET',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_MESSAGING_SENDER_ID',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || 'YOUR_APP_ID',
-};
-
-let app, auth, db;
+let firebaseConfig;
 try {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-} catch (error) {
-  console.warn('Firebase initialization failed. Ensure you have added your config.', error);
+  if (typeof __firebase_config !== 'undefined') {
+    firebaseConfig = JSON.parse(__firebase_config);
+  } else {
+    firebaseConfig = {
+      apiKey: "AIzaSyAgZUtc5aZguYz_MW5zISkuLvDgPmDixfg",
+      authDomain: "meratus-frd-lms-10276.firebaseapp.com",
+      projectId: "meratus-frd-lms-10276",
+      storageBucket: "meratus-frd-lms-10276.firebasestorage.app",
+      messagingSenderId: "845694770386",
+      appId: "1:845694770386:web:f103c31b21d082c8fd610b"
+    };
+  }
+} catch (e) {
+  console.warn("Config parse error, falling back to static config.", e);
 }
 
-const appId = 'meratus-skill-matrix';
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'meratus-liner-system';
 
-// ==========================================
-// 2. EXISTING MODULES & DETAILED OBJECTIVES
-// ==========================================
+const LINER_SUBUNITS = ['Liner Trade', 'Liner Ops', 'Liner Intl', 'Liner Commercial'];
+const ALL_LEVELS = ['L1', 'L2', 'L3', 'L4', 'L5'];
+const CATALOG_LEVELS = ['Basic', 'Intermediate', 'Advance'];
+
+const LINER_CATEGORIES = [
+  { id: 'C1', name: 'Regulatory & Compliance' },
+  { id: 'C2', name: 'Technology & Analytics' },
+  { id: 'C3', name: 'Liner Commercial & Account Mgt' },
+  { id: 'C4', name: 'Liner Trade & Pricing Strategy' },
+  { id: 'C5', name: 'Marine & Fleet Operations' },
+  { id: 'C6', name: 'Terminal & Port Operations' },
+  { id: 'C7', name: 'Financial & Business Acumen' }
+];
+
+const LINER_DOMAINS = [
+  { id: 'D1', cat: 'Regulatory & Compliance', name: 'Maritime Law & Intl Conventions' },
+  { id: 'D2', cat: 'Regulatory & Compliance', name: 'Commercial & Trade Regulation' },
+  { id: 'D3', cat: 'Regulatory & Compliance', name: 'Company Policies & Procedures' },
+  { id: 'D4', cat: 'Regulatory & Compliance', name: 'QSHE & Cargo Safety' },
+  { id: 'D5', cat: 'Technology & Analytics', name: 'Liner Digital Systems' },
+  { id: 'D6', cat: 'Liner Commercial & Account Mgt', name: 'Customer Relationship Management' },
+  { id: 'D7', cat: 'Liner Commercial & Account Mgt', name: 'Sales Execution' },
+  { id: 'D8', cat: 'Liner Commercial & Account Mgt', name: 'Commercial Documentation' },
+  { id: 'D9', cat: 'Liner Commercial & Account Mgt', name: 'Product & Service Knowledge' },
+  { id: 'D10', cat: 'Liner Commercial & Account Mgt', name: 'Business Development' },
+  { id: 'D11', cat: 'Liner Trade & Pricing Strategy', name: 'Pricing Management & Strategy' },
+  { id: 'D12', cat: 'Liner Trade & Pricing Strategy', name: 'Market Intelligence & Analysis' },
+  { id: 'D13', cat: 'Liner Trade & Pricing Strategy', name: 'Network & Trade Strategy' },
+  { id: 'D14', cat: 'Marine & Fleet Operations', name: 'Vessel & Voyage Management' },
+  { id: 'D15', cat: 'Marine & Fleet Operations', name: 'Bunker Management' },
+  { id: 'D16', cat: 'Terminal & Port Operations', name: 'Terminal & Port Operations' },
+  { id: 'D17', cat: 'Terminal & Port Operations', name: 'Container & Equipment Management' },
+  { id: 'D18', cat: 'Financial & Business Acumen', name: 'Financial Performance Analysis' },
+  { id: 'D19', cat: 'Financial & Business Acumen', name: 'Budgeting & Cost Control' },
+];
+
+const LEVEL_COLORS = {
+  'L1': 'bg-slate-100 text-slate-600 border-slate-200',
+  'L2': 'bg-sky-100 text-sky-700 border-sky-200',
+  'L3': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  'L4': 'bg-amber-100 text-amber-700 border-amber-200',
+  'L5': 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200',
+  '': 'bg-gray-50 text-gray-300 border-dashed border-gray-200' 
+};
+
+const RAW_ROLE_DATA = [
+  // LINER TRADE
+  ['Liner Trade', 'Tier A', 'Chief Trade Officer', 'L4','L5','L5','L3','L3','L4','L3','L3','L4','L4','L5','L5','L5','L3','L2','L3','L3','L5','L5'],
+  ['Liner Trade', 'Tier A', 'Dep. Chief Trade Officer', 'L4','L4','L4','L3','L3','L4','L3','L3','L4','L4','L5','L5','L5','L3','L2','L3','L3','L5','L5'],
+  ['Liner Trade', 'Tier B', 'Product Dev. Manager', 'L3','L4','L3','L3','L3','L3','L2','L3','L5','L4','L4','L4','L4','L3','L2','L3','L3','L4','L3'],
+  ['Liner Trade', 'Tier B', 'Pricing Manager', 'L2','L4','L4','L2','L4','L3','L2','L3','L4','L2','L5','L4','L3','L3','L2','L2','L2','L5','L4'],
+  ['Liner Trade', 'Tier B', 'Line Manager (×5 regions)', 'L3','L4','L4','L3','L3','L4','L3','L3','L4','L3','L3','L4','L4','L3','L2','L3','L3','L4','L4'],
+  ['Liner Trade', 'Tier B', 'Business Dev. Manager', 'L2','L3','L3','L2','L2','L4','L3','L3','L4','L5','L3','L4','L3','L2','L1','L2','L2','L4','L3'],
+  ['Liner Trade', 'Tier C', 'Trade PMO', 'L2','L3','L4','L2','L4','L2','L1','L3','L3','L2','L2','L3','L3','L2','L1','L2','L2','L4','L4'],
+  ['Liner Trade', 'Tier C', 'Cargo Flow Coordinator', 'L2','L3','L3','L3','L3','L3','L2','L3','L3','L2','L3','L3','L3','L3','L2','L3','L4','L4','L3'],
+  ['Liner Trade', 'Tier D', 'Line Assistant', 'L2','L3','L3','L2','L3','L3','L3','L3','L3','L2','L2','L2','L2','L2','L1','L2','L2','L2','L2'],
+  ['Liner Trade', 'Tier D', 'Pricing Staff', 'L1','L2','L2','L2','L3','L2','L1','L3','L3','L1','L4','L3','L2','L2','L1','L2','L2','L3','L3'],
+  ['Liner Trade', 'Tier D', 'Specialist (Reefer/SOC/Isotank)', 'L2','L3','L2','L4','L3','L3','L3','L3','L4','L2','L3','L2','L2','L2','L1','L3','L3','L2','L2'],
+  ['Liner Trade', 'Tier D', 'Business Dev. Staff', 'L1','L2','L2','L2','L2','L3','L3','L2','L3','L4','L2','L3','L2','L1','L1','L1','L1','L3','L2'],
+  ['Liner Trade', 'Tier D', 'Cargo Flow Staff', 'L2','L2','L2','L3','L3','L2','L1','L3','L3','L1','L2','L3','L2','L2','L1','L3','L3','L3','L2'],
+  ['Liner Trade', 'Tier D', 'OOG / Project Specialist', 'L2','L2','L2','L4','L2','L3','L3','L3','L4','L2','L2','L2','L2','L2','L1','L3','L3','L2','L2'],
+
+  // LINER OPERATIONS
+  ['Liner Ops', 'Tier A', 'GM Liner Operation', 'L4','L3','L5','L4','L3','L3','L2','L3','L3','L2','L2','L4','L4','L4','L4','L4','L4','L4','L4'],
+  ['Liner Ops', 'Tier B', 'Liner Operation Manager', 'L4','L3','L4','L3','L3','L3','L1','L3','L3','L1','L2','L3','L3','L4','L3','L4','L3','L3','L4'],
+  ['Liner Ops', 'Tier B', 'Bunkering & Fleet Eff. Mgr', 'L4','L2','L4','L3','L4','L2','L1','L3','L3','L2','L2','L3','L3','L4','L5','L3','L3','L4','L4'],
+  ['Liner Ops', 'Tier B', 'MFEC Manager', 'L3','L3','L4','L3','L4','L2','L1','L3','L3','L1','L3','L3','L4','L5','L4','L4','L3','L4','L4'],
+  ['Liner Ops', 'Tier B', 'Terminal Performance Mgr', 'L3','L3','L4','L3','L3','L3','L1','L3','L3','L1','L2','L3','L3','L3','L2','L5','L4','L4','L4'],
+  ['Liner Ops', 'Tier B', 'Equipment & Logistic Mgr', 'L2','L2','L3','L3','L3','L2','L1','L2','L2','L1','L1','L2','L2','L3','L2','L3','L5','L3','L4'],
+  ['Liner Ops', 'Tier C', 'Risk Management & HSE', 'L4','L2','L3','L5','L2','L1','L1','L2','L2','L1','L1','L2','L2','L3','L2','L3','L2','L2','L2'],
+  ['Liner Ops', 'Tier C', 'PMO Liner Operation', 'L2','L2','L4','L2','L4','L2','L1','L2','L2','L1','L1','L3','L3','L3','L2','L3','L3','L4','L4'],
+  ['Liner Ops', 'Tier D', 'Ship Planner', 'L3','L2','L3','L4','L4','L2','L1','L3','L3','L1','L2','L2','L3','L5','L3','L4','L3','L2','L2'],
+  ['Liner Ops', 'Tier D', 'Bunker Operation', 'L3','L2','L3','L3','L3','L2','L1','L3','L2','L1','L2','L2','L2','L3','L5','L3','L2','L3','L3'],
+  ['Liner Ops', 'Tier D', 'Bunker Analyst', 'L3','L2','L2','L2','L4','L1','L1','L2','L2','L1','L2','L3','L2','L3','L5','L2','L2','L3','L3'],
+  ['Liner Ops', 'Tier D', 'Voyage Performance', 'L3','L2','L3','L3','L4','L2','L1','L3','L3','L1','L3','L3','L3','L5','L4','L3','L3','L4','L3'],
+  ['Liner Ops', 'Tier D', 'Operation Control', 'L3','L2','L3','L3','L4','L3','L1','L3','L3','L1','L2','L2','L2','L3','L2','L5','L4','L3','L3'],
+  ['Liner Ops', 'Tier D', 'Disbursement Account', 'L2','L3','L3','L2','L3','L3','L1','L4','L2','L1','L2','L2','L1','L2','L2','L4','L3','L4','L4'],
+  ['Liner Ops', 'Tier D', 'Equipment & Logistic Staff', 'L2','L1','L3','L3','L3','L2','L1','L2','L2','L1','L1','L1','L2','L3','L2','L3','L5','L3','L3'],
+  ['Liner Ops', 'Tier D', 'Maintenance & Repair', 'L2','L1','L3','L3','L2','L1','L1','L2','L1','L1','L1','L1','L1','L2','L2','L2','L3','L2','L2'],
+
+  // LINER INTERNATIONAL
+  ['Liner Intl', 'Tier A', 'Chief International Trade Officer', 'L5','L5','L5','L3','L3','L4','L3','L4','L4','L5','L5','L5','L5','L3','L2','L3','L3','L5','L5'],
+  ['Liner Intl', 'Tier B', 'GM International Trade', 'L5','L5','L4','L3','L3','L4','L3','L4','L4','L4','L5','L5','L5','L3','L2','L3','L3','L5','L5'],
+  ['Liner Intl', 'Tier B', 'GM Commercial Intl Liner', 'L4','L4','L4','L3','L3','L5','L4','L4','L5','L4','L4','L4','L4','L3','L2','L3','L3','L5','L4'],
+  ['Liner Intl', 'Tier B', 'Customer Service Mgr Intl', 'L3','L4','L4','L3','L4','L5','L2','L4','L4','L2','L2','L2','L2','L2','L1','L2','L2','L2','L3'],
+  ['Liner Intl', 'Tier B', 'Country Head Indonesia', 'L3','L4','L3','L2','L3','L4','L3','L3','L4','L3','L3','L4','L3','L2','L1','L3','L3','L4','L4'],
+  ['Liner Intl', 'Tier B', 'Country Head China', 'L4','L4','L3','L2','L3','L4','L3','L3','L4','L4','L3','L4','L3','L2','L1','L2','L3','L4','L4'],
+  ['Liner Intl', 'Tier C', 'PMO International Trade', 'L3','L3','L4','L2','L4','L2','L1','L3','L3','L2','L2','L4','L3','L2','L1','L2','L2','L4','L4'],
+  ['Liner Intl', 'Tier C', 'Pricing Manager', 'L3','L4','L3','L3','L4','L3','L2','L3','L4','L2','L5','L4','L3','L3','L2','L2','L2','L4','L4'],
+  ['Liner Intl', 'Tier C', 'Line Manager', 'L4','L4','L3','L3','L3','L4','L3','L4','L4','L3','L4','L4','L4','L3','L2','L3','L3','L4','L4'],
+  ['Liner Intl', 'Tier C', 'Partnership Manager', 'L3','L3','L3','L2','L3','L4','L3','L2','L3','L5','L3','L4','L4','L2','L1','L2','L2','L3','L3'],
+  ['Liner Intl', 'Tier C', 'Network Dev. Manager', 'L4','L3','L3','L2','L3','L3','L3','L2','L3','L5','L3','L5','L5','L3','L1','L3','L2','L3','L3'],
+  ['Liner Intl', 'Tier C', 'Agency Manager', 'L4','L4','L3','L3','L3','L4','L2','L4','L3','L4','L2','L3','L3','L3','L1','L3','L3','L2','L3'],
+  ['Liner Intl', 'Tier C', 'Country Manager Timor Leste', 'L4','L4','L3','L3','L3','L4','L3','L3','L3','L3','L3','L3','L3','L2','L1','L3','L2','L3','L4'],
+  ['Liner Intl', 'Tier C', 'Country Manager PNG', 'L4','L4','L3','L3','L2','L4','L3','L3','L3','L3','L2','L3','L3','L2','L1','L3','L2','L3','L4'],
+  ['Liner Intl', 'Tier D', 'Agency Coordinator', 'L3','L4','L2','L3','L3','L3','L1','L4','L2','L2','L2','L2','L2','L2','L1','L2','L3','L2','L2'],
+  ['Liner Intl', 'Tier D', 'CS Staff (Dom. & Int\'l)', 'L2','L3','L3','L3','L4','L4','L2','L4','L3','L1','L2','L1','L1','L2','L1','L2','L2','L1','L1'],
+  ['Liner Intl', 'Tier D', 'Sales Staff Country Office', 'L2','L2','L2','L2','L3','L3','L4','L2','L3','L3','L2','L3','L2','L1','L1','L2','L2','L2','L2'],
+  ['Liner Intl', 'Tier D', 'Operations & Support Staff', 'L3','L3','L2','L2','L3','L2','L1','L3','L2','L1','L1','L1','L1','L2','L1','L3','L2','L2','L2'],
+
+  // LINER COMMERCIAL
+  ['Liner Commercial', 'Tier A', 'Head of Liner Commercial', 'L3','L4','L5','L3','L3','L5','L4','L3','L5','L5','L4','L4','L3','L2','L1','L2','L2','L5','L5'],
+  ['Liner Commercial', 'Tier B', 'GM CX Liner Commercial', 'L2','L3','L4','L2','L4','L5','L3','L4','L4','L3','L2','L3','L2','L2','L1','L2','L2','L4','L4'],
+  ['Liner Commercial', 'Tier B', 'GM Operation Liner Commercial', 'L2','L3','L4','L3','L3','L4','L2','L4','L4','L2','L2','L3','L3','L2','L1','L3','L3','L4','L4'],
+  ['Liner Commercial', 'Tier B', 'GM MLT & VAS Liner Commercial', 'L2','L3','L4','L3','L3','L4','L3','L3','L5','L4','L3','L4','L3','L2','L1','L3','L3','L4','L4'],
+  ['Liner Commercial', 'Tier B', 'GM Sales Liner Commercial', 'L3','L4','L4','L3','L3','L5','L5','L3','L5','L5','L4','L4','L3','L2','L2','L2','L2','L4','L4'],
+  ['Liner Commercial', 'Tier C', 'PMO Liner Commercial', 'L2','L3','L4','L2','L4','L3','L1','L3','L3','L2','L2','L3','L2','L2','L1','L2','L2','L4','L4'],
+  ['Liner Commercial', 'Tier C', 'CX Manager', 'L2','L3','L4','L2','L4','L5','L2','L4','L4','L3','L2','L3','L2','L2','L1','L2','L2','L3','L3'],
+  ['Liner Commercial', 'Tier C', 'Regional Manager Operation (×3)', 'L2','L3','L4','L3','L3','L4','L3','L3','L4','L3','L3','L3','L2','L2','L1','L3','L3','L4','L4'],
+  ['Liner Commercial', 'Tier C', 'Sales Manager MLT & VAS', 'L2','L3','L3','L3','L3','L4','L4','L2','L5','L4','L3','L4','L3','L2','L1','L2','L2','L3','L3'],
+  ['Liner Commercial', 'Tier C', 'Operation Manager MLT & VAS', 'L2','L3','L4','L3','L3','L3','L1','L3','L4','L2','L2','L2','L2','L2','L1','L3','L3','L3','L3'],
+  ['Liner Commercial', 'Tier C', 'Sales Manager (Reefer/BCO/SOC)', 'L2','L3','L3','L3','L3','L4','L4','L2','L4','L4','L3','L3','L2','L2','L2','L2','L2','L3','L3'],
+  ['Liner Commercial', 'Tier D', 'Pool Data Analyst & Admin', 'L1','L2','L3','L1','L4','L2','L1','L2','L2','L1','L2','L3','L1','L1','L1','L1','L1','L4','L3'],
+  ['Liner Commercial', 'Tier D', 'Centralized Doc. & Invoicing', 'L2','L3','L3','L2','L4','L3','L1','L5','L2','L1','L1','L1','L1','L1','L1','L2','L2','L2','L2'],
+  ['Liner Commercial', 'Tier D', 'Branch Manager / Coordinator', 'L2','L3','L3','L2','L3','L4','L3','L3','L4','L3','L3','L3','L2','L2','L1','L2','L2','L3','L3'],
+  ['Liner Commercial', 'Tier D', 'Sales Staff (Regional)', 'L1','L2','L3','L2','L3','L4','L4','L2','L4','L3','L2','L2','L1','L1','L1','L1','L1','L2','L2'],
+  ['Liner Commercial', 'Tier D', 'Operation Staff (Regional)', 'L2','L2','L3','L3','L3','L3','L1','L3','L3','L1','L1','L1','L1','L2','L1','L3','L3','L2','L2'],
+  ['Liner Commercial', 'Tier D', 'Customer Service Staff', 'L2','L2','L3','L2','L4','L4','L2','L3','L3','L1','L1','L1','L1','L2','L1','L2','L2','L1','L1'],
+  ['Liner Commercial', 'Tier D', 'Sales Spec. (Reefer/BCO/SOC)', 'L1','L2','L2','L3','L2','L4','L4','L2','L4','L3','L2','L2','L1','L1','L1','L1','L1','L2','L2']
+];
+
+const BEHAVIORAL_INDICATORS = {
+  'D1': { L1: 'Aware of major IMO conventions (SOLAS, MARPOL, COLREG, ISM, ISPS). Can name key regulatory bodies. Understands why they matter to Liner operations.', L2: 'Reads regulatory summaries and applies them to daily tasks. Identifies relevant regulations for common shipping scenarios. Follows compliance checklists.', L3: 'Applies maritime law knowledge independently in commercial or operational decisions. Reviews documents for regulatory compliance. Advises peers.', L4: 'Interprets complex and evolving regulatory requirements. Identifies compliance risks proactively. Manages regulatory risk across a trade or fleet.', L5: 'Drives organisational maritime regulatory strategy. Acts as subject matter expert. Represents Meratus in regulatory and industry forums.' },
+  'D2': { L1: 'Aware that commercial transactions are governed by contracts. Knows B/L, Charter Party and Incoterms conceptually.', L2: 'Understands standard commercial terms. Reads basic trade documents. Applies Incoterms correctly in customer-facing interactions.', L3: 'Reviews and interprets CPs, B/Ls and trade contracts independently. Identifies legal and commercial risks. Advises internal stakeholders.', L4: 'Negotiates commercial terms with full understanding of legal implications. Manages contract disputes end to end.', L5: 'Establishes Meratus standards for commercial contracts. Leads complex dispute resolution. Drives commercial policy development.' },
+  'D3': { L1: 'Aware of P3W and major company policies. Knows where to find procedures. Follows policies when directed.', L2: 'Follows established procedures in daily work. Applies P3W guidance correctly. Raises process gaps when found.', L3: 'Works independently within the policy framework. Trains peers on correct procedures. Identifies and proposes fixes for process gaps.', L4: 'Interprets policy for complex scenarios. Contributes to policy development. Reviews adherence across team or region.', L5: 'Drives policy development and organisational alignment. Sponsors governance changes. Sets the tone for process-disciplined culture.' },
+  'D4': { L1: 'Aware of QSHE requirements and major ISO standards. Knows DG cargo classes and special cargo requires specific handling.', L2: 'Follows QSHE procedures. Reports near-misses using SIKAP. Identifies cargo types and applies basic handling requirements.', L3: 'Applies QSHE principles independently. Coaches peers. Manages cargo safety documentation for standard and special cargo.', L4: 'Reviews QSHE performance. Leads compliance audits. Expert in specialty cargo (DG, reefer, OOG). Drives corrective actions.', L5: 'Drives QSHE culture and standards across the Liner function. Leads ISO certification processes. Ultimate cargo safety authority.' },
+  'D5': { L1: 'Knows the main Liner digital systems and their purpose. Can navigate to main screens with guidance.', L2: 'Uses Liner systems for standard daily commercial and operational tasks. Produces standard reports. Flags system anomalies.', L3: 'Uses all relevant systems proficiently for standard and non-routine tasks. Troubleshoots discrepancies. Trains new users.', L4: 'Advanced user of all Liner systems and analytics tools. Designs automated dashboards. Contributes to system improvement.', L5: 'System subject matter expert. Leads system implementation or migration. Governs data standards and drives digital adoption.' },
+  'D6': { L1: 'Understands the importance of CRM. Provides courteous service in all customer interactions. Knows the escalation path.', L2: 'Manages routine customer interactions professionally. Escalates issues promptly. Updates customer records.', L3: 'Independently manages a portfolio of accounts. Resolves complaints without escalation. Develops account plans.', L4: 'Develops strategic account plans. Builds senior-level customer relationships. Manages high-value and complex accounts.', L5: 'Defines CRM strategy for the Liner function. Manages critical executive relationships. Drives customer-centric culture.' },
+  'D7': { L1: 'Aware of Meratus products and sales process. Can describe value proposition basically. Shadows senior staff.', L2: 'Conducts basic sales activities with guidance. Prepares standard quotations. Maintains contact list and call record.', L3: 'Manages own pipeline independently. Prepares tailored proposals. Meets targets. Handles routine objections.', L4: 'Closes complex, multi-service or high-value deals. Coaches junior staff. Manages large strategic accounts.', L5: 'Designs the sales methodology for Liner Commercial. Drives overall sales performance culture. Sets regional targets.' },
+  'D8': { L1: 'Recognises key shipping and commercial documents. Explains their basic function in the supply chain.', L2: 'Prepares standard documents with guidance. Checks for basic errors. Follows the document release workflow.', L3: 'Independently prepares and reviews full documentation set. Resolves discrepancies. Manages document timelines.', L4: 'Manages complex documentation scenarios (multi-modal, VAS, SOC, reefer). Designs workflows. Trains teams.', L5: 'Sets documentation standards for the Liner function. Authors policy. Manages regulatory compliance for documents.' },
+  'D9': { L1: 'Knows Meratus main service offerings, primary routes and basic container types.', L2: 'Explains standard products accurately. Identifies the right product for a given customer need.', L3: 'Expert in assigned product area. Advises customers on complex requirements. Positions Meratus against competitors.', L4: 'Deep expertise across full product range. Provides input to product development. Develops configurations for complex customers.', L5: 'Defines Meratus Liner product strategy and portfolio. Develops new commercial service offerings. Ultimate product authority.' },
+  'D10': { L1: 'Aware of BD approach and sales pipeline. Describes what business development means in the Liner context.', L2: 'Supports BD activities (market research, prospect database) under guidance. Prepares tender support data.', L3: 'Independently manages BD pipeline for territory. Prepares tailored proposals. Leads mid-size tenders.', L4: 'Leads complex and high-value tender processes. Develops market entry strategies. Manages strategic partnerships.', L5: 'Sets BD strategy. Drives new market entry. Leads the most strategically important commercial partnerships and agency networks.' },
+  'D11': { L1: 'Understands freight rate components. Aware pricing decisions directly affect route profitability.', L2: 'Calculates standard freight rates using tariffs. Applies surcharges accurately. Prepares standard freight estimates.', L3: 'Manages pricing for a defined market within approved parameters. Applies segmentation and tier pricing logic.', L4: 'Designs pricing structures. Manages complex multi-route pricing. Conducts route profitability analysis. Drives yield improvement.', L5: 'Defines pricing policy for Liner function. Drives yield management strategy. Owns route and function profitability targets.' },
+  'D12': { L1: 'Reads standard market reports. Aware of key shipping market indicators (freight indices, utilisation, fuel).', L2: 'Collects market data from multiple sources. Creates basic market summaries and competitor comparisons.', L3: 'Conducts structured market research independently. Produces competitor analysis. Identifies market trends and risks.', L4: 'Designs market intelligence frameworks. Synthesises complex data into strategic insights. Advises leadership.', L5: 'Defines market strategy based on intelligence. Leads market entry/exit decisions. Represents Meratus in industry forums.' },
+  'D13': { L1: 'Aware of network structure. Identifies key domestic trade lanes. Understands routes optimise cargo flow.', L2: 'Understands route design principles. Reads network diagrams. Identifies basic efficiency issues from data.', L3: 'Analyses route performance. Uses TCE in route evaluation. Contributes inputs to trade decisions.', L4: 'Designs new routes and configurations. Structures VSA proposals. Models network-wide impact of changes.', L5: 'Sets the Meratus Liner network strategy. Makes strategic fleet-wide deployment decisions. Drives VSA alliances.' },
+  'D14': { L1: 'Aware of basic vessel types and voyage concepts. Can read a simple proforma schedule.', L2: 'Reads voyage data and proforma schedules. Understands capacity, speed and consumption relationships.', L3: 'Uses voyage performance data in decisions. Interprets ship particulars. Monitors schedule reliability.', L4: 'Manages fleet performance across routes. Designs voyage optimisation strategies (weather routing, speed).', L5: 'Defines vessel operations standards and voyage planning frameworks. Owns fleet efficiency targets.' },
+  'D15': { L1: 'Aware bunker is a major voyage cost. Knows main fuel types. Understands BAF surcharges.', L2: 'Understands bunkering process basics. Reads vessel fuel reports. Applies BAF correctly in quotations.', L3: 'Manages bunker ops for assigned vessels. Monitors consumption vs targets. Coordinates bunker surveys.', L4: 'Manages bunker strategy for fleet. Oversees QC and fraud prevention. Ensures environmental compliance (CII, EEXI).', L5: 'Defines bunker strategy and policy. Leads decarbonisation programmes. Manages major fuel supplier relationships.' },
+  'D16': { L1: 'Aware of role of ports and terminals. Names main terminal types and their basic function.', L2: 'Understands terminal ops basics. Reads performance reports. Identifies obvious inefficiencies. Aware of KPIs.', L3: 'Uses port knowledge in decisions. Manages port-related coordination. Advises on port restrictions.', L4: 'Manages terminal ops for complex multi-port situations. Drives performance improvement. Negotiates with operators.', L5: 'Defines port operational standards. Leads port performance improvement programmes. Manages critical port relationships.' },
+  'D17': { L1: 'Knows container types. Aware equipment positioning and idle containers represent significant cost.', L2: 'Monitors container inventory. Follows repositioning procedures. Reports idle containers.', L3: 'Manages equipment flow independently. Reduces idle containers. Tracks reefer container performance.', L4: 'Designs equipment positioning strategy. Manages container leasing decisions. Optimises equipment costs.', L5: 'Sets container fleet management policy. Drives fleet composition and investment strategy. Governs equipment costs.' },
+  'D18': { L1: 'Aware of key financial metrics (TCE, EBITDA, CM, Route P&L). Reads basic financial reports.', L2: 'Reads financial reports and identifies variances. Understands volume/rate/revenue relationship. Basic calculations.', L3: 'Analyses route P&L independently. Prepares financial performance reports. Identifies cost optimisations.', L4: 'Designs financial analysis frameworks. Leads performance improvement based on data. Prepares management reports.', L5: 'Owns financial performance of Liner function. Presents to C-level. Drives profitability strategy.' },
+  'D19': { L1: 'Aware of budgeting concept. Understands costs must be planned and managed within limits.', L2: 'Tracks actual costs vs budget for own activities. Reports variances. Follows expense approval process.', L3: 'Prepares budget for own area. Monitors and explains variances. Identifies and implements cost savings.', L4: 'Manages full budget cycle for function/region. Drives cost discipline. Prepares rolling forecasts. Leads cost initiatives.', L5: 'Sets budgeting methodology for Liner function. Owns total budget. Drives cost discipline culture.' }
+};
+
 const RAW_EXISTING_MODULES = [
   "Action Tracker 2023", "AI Workshop - AI Implementation Use Cases", "AI Workshop - Understanding the AI Landscape 2024", "Asset & Charter", "Asset Charter - Basic Understanding Marine Insurance", "Asset Charter - Bridge Resource Management BRM", "Asset Charter - Chartering Operations", "Asset Charter - Digital Inspection and Documentation Software", "Asset Charter - Engine Component Inspection Alat Berat Alat Ringan", "Asset Charter - Hydraulic System Inspection", "Asset Charter - IMO Regulation - Marine Pollution MARPOL", "Asset Charter - IMO Regulation SOLAS", "Asset Charter - Inspeksi QSHE Alat Berat Depo", "Asset Charter - Inspeksi QSHE Alat Berat Terminal", "Asset Charter - Inspeksi QSHE Operational Trucking MJT", "Asset Charter - Inspeksi QSHE Repair Container", "Asset Charter - Inspeksi QSHE Warehouse", "Asset Charter - Inspeksi QSHE Workshop", "Asset Charter - Inspeksi Steering", "Asset Charter - Introduction to Asset Charter Business", "Asset Charter - Introduction to Chartering", "Asset Charter - ISO 9001 2015", "Asset Charter - Lifting Cargoes on Flat Rack Container", "Asset Charter - Non Vessel Asset Management Truck Trailer", "Asset Charter - Non Vessel Risk Classification Measurement", "Asset Charter - Pemahaman SMS melalui QSHE Barriers", "Asset Charter - Standar Pedoman Implementasi QSHE Non Vessel", "BA - Asset Charter Introduction to QSHE Meratus", "BA - CLC Container Repair Process", "BA - CLC MLO Depot Business Marketing Strategy", "BA - CLC Receiving Delivery and Stuffing Stripping Process at Depo", "BA - Liner Basic Container", "BA - Liner Basic Knowledge Terminal Operation", "BA - Liner Introduction to MFEC", "BA - Liner Product Knowledge Meratus Liner", "BA - Liner Service Excellence", "BA - Liner Term of Shipment", "BA - Logistics Basic Knowledge Reefer", "BA - Logistics Customs Clearance", "BA - Logistics Sea Freight Domestic", "BA - Logistics Warehouse Transport", "BA - MSM Introduction to Ship Management", "BA - MTM Heavy Equipment Maintenance", "Basic CLC - Terminal Basic Knowledge Business Process CLC Terminal", "Basic CLC Depo Management", "Basic CLC Heavy Equipment", "Basic CLC Pengetahuan Bongkar Muat", "Basic CLC Penyerahan dan Penerimaan Kontainer", "Basic CLC Repair Container", "Basic English - 16 Basic Tenses", "Basic English - Email Writing", "Basic English - Negotiation Skills", "Basic English - Preposition of Time", "Basic English - Presentation Skills", "Basic Excel Function", "Basic Logistic HS Code dan Kepabeanan", "Basic Logistic Reefer Container Handling", "Basic Logistics - Commercial Account Plan", "Basic Logistics - Commercial Basic Agency International Service", "Basic Logistics - Commercial Exim dan Incoterms", "Basic Logistics - Commercial Incoterms Logistics", "Basic Logistics - Commercial Sales Skills", "Basic Logistics - Operations Operation Monitoring System Support", "Basic Logistics - Operations SCM Profit", "Basic Logistics - P3W Sales", "Basic Logistics Account Receivable", "Basic Logistics Airfreight", "Basic Logistics Basic Knowledge Business Process Logistics", "Basic Logistics Basic LCL Less than Container Load", "Basic Logistics Basic Operation", "Basic Logistics Custom Clearence", "Basic Logistics Customer Service", "Basic Logistics Industrial Project", "Basic Logistics Pemahaman Klaim Asuransi", "Basic Logistics Quality Management System", "Basic Logistics Sea Freight", "Basic Logistics Vendor Management", "Basic Logistics Warehouse Transport", "Basic Operation 3 Port Info Ship Particular", "Basic Operation 4 Loading Unloading", "Basic Operation 5 Container Inventory Management", "Basic Operation 9 IMDG Code", "Basic Public Speaking Skills", "Basic Shipping Basic Knowledge Business Process Shipping Liner", "BPM", "BPM - Assessment for Digital Transformation", "BPM - Basic Shipping Induction Inbound and Outbound Process", "BPM - Business Process Management Framework", "BPM - Core Model Framework", "BPM - Customer Centricity in Shipping Business", "BPM - Induction to Melina System", "BPM - Management of P3W", "BPM - Project Management", "BPM - Work Load Analysis for Project", "Business Control Framework 2024", "Business Negotiation Skill Malik", "Business Presentation Skill Malik", "Business Process Modelling for Level 10 Above", "CCT Manager as A Profession Officer Level", "CLC", "CLC - Backlog Management", "CLC - Block Diagram pada System Electric", "CLC - Block Diagram pada System Engine", "CLC - Block Diagram pada System Hydraulic", "CLC - Brake System", "CLC - Cara Menggunakan Common Tool", "CLC - Daily Maintenance", "CLC - Differential Final Drive", "CLC - Electrical System", "CLC - Engine System", "CLC - Failure Analisis Report", "CLC - Hydraulic System", "CLC - Hydraulic Troubleshooting", "CLC - Karakteristik Komponen Elektrik", "CLC - Karakteristik Komponen Non Elektrik", "CLC - Maintenance Process", "CLC - Mekanik Troubleshooting", "CLC - Nama Fungsi Prinsip Kerja Komponen Engine", "CLC - Pembacaan Menu pada Monitoring System", "CLC - Penanganan Claim Container", "CLC - Pengenalan Fungsi dari Komponen Accesories", "CLC - Pengenalan Fungsi dari Komponen Electric", "CLC - Pengenalan Fungsi dari Komponen Hydraulic", "CLC - Pengenalan Fungsi dari Komponen Power Train", "CLC - Pengetahuan Forklift", "CLC - Pengetahuan Reach Stacker", "CLC - Perencanaan Kebutuhan Alat Mekanis", "CLC - Perencanaan Lay Out Depo", "CLC - Pricing Strategy", "CLC - Setting and Adjustment Major Component", "CLC - Stack Hampar Container", "CLC - Stuffing Stripping", "CLC - Teknik Dasar Pengelasan", "CLC - Teknik Lepas Pasang Komponen Electric", "CLC - Teknik Survey Quality Control", "CLC - Tyre Management", "CLC - Upload Download Program pada Unit", "CLC - Yard Management system", "CLC- Penanganan Cargo", "Code of Conduct", "Code of Conduct English Version", "Code of Conduct for Manager", "Company Profile Meratus Group", "Company Regulation 2025 - 2027 Indonesian Version", "Company Regulation 2025-2027 English Version", "Contract Management System for Level 10 Above", "Control and Monitoring Malik", "Corp Comm - Branding Development", "Corp Comm - Communication Campaign", "CorpCom", "Corporate Culture 2025", "Crewing", "Crewing - Awareness ISO 37001 2016", "Crewing - Pelatihan Audit Internal ISO 37001 2016", "Edukasi Pemilahan Sampah", "Effective Collaboration Malik", "Effective Planning Malik", "EXAMPLE Basic Container", "Fin Acc - Bills to Invoice", "Fin Acc - Vendor Invoice Acceptance", "Finance", "Finance Policy - Annual Budget", "Fraud Awareness", "GA - Vehicle Maintenance", "GA - Vehicle Selling", "GA - Vehicle Usage", "GA-Asset Property", "Good Corporate Governance 2024", "Group Policy - Authority Matrix", "Group Policy - CAPEX", "Group Policy - for Level 10 Above", "Group Policy - Management of Non-Confirmity and Improvement", "Health Talk - Hari Anak - Ready Set School 2024", "Health Talk - Pencernaan Kuat Hidup Nikmat", "Health Talk - Virus Monkeypox", "HMM", "HMM - Claim Procedure", "HMM - Stowage Cargo Overview", "How To Create Contract - TPS HMM", "HR - Aspek Normatif Hubungan Industrial", "HR - Manajemen Remunerasi", "HR - Manajemen Talenta", "HR - Melaksanakan Analisa Beban Kerja", "HR - Membangun Komunikasi Organisasi Yang Efektif", "HR - Menyusun dan Merancang Kebutuhan Pembelajaran", "HR - Menyusun Kebutuhan SDM", "HR - Menyusun Peraturan Perusahaan Perjanjian Kerja", "HR - Menyusun Uraian Jabatan", "HR - Merancang Struktur Organisasi", "HR - Merumuskan Indikator Kinerja Individu", "HR - Merumuskan Proses Bisnis dan SOP MSDM", "HR - Merumuskan Strategi Manajemen SDM", "HR - Perselisihan Hubungan Industrial", "HR - Strategic Interviewing", "HRD", "Internal Audit", "Internal Audit - Enterprise Risk Management", "Introduction to E-Pact Employee Self Service", "Introduction to HRIS Time Management Module PeopleStrong Employee Self Service", "Introduction to Manager as A Profession", "Introduction to Objectives Key Results 2024", "Introduction to PeopleStrong Learning Module", "IR Management for Level 10 Above - 2025", "IT", "IT - Agile Scrum Introduction", "IT - BitLocker Implementation Security Awareness", "IT - Cybersecurity Awareness 2023", "IT - Design System", "IT - Electronic Data Interchange Introduction", "IT - Implementation of Cast Software as Software Intelligence Automated 2023", "IT - Implementing RPA to Support The Business", "IT - Incident Response", "IT - Infrastructure and Application Modernization", "IT - Introduction to Microsoft Fabric", "IT - ISO 27001 2022", "IT - Meratus ACE Support Services", "IT - Network Operation Center Introduction", "IT - Penetration Testing", "IT - Personal Data Protection Law Things You Need to Know", "IT - Remote Monitoring System for Vessel IoT Solution", "IT - Secure Access Service Edge SASE", "IT - Security Event Analysis", "IT - Test Driven Development Introduction", "IT - Understanding Security in Development and Operations Key Insights and Considerations", "IT - UX Research", "IT- Clean Architecture Design Pattern", "Leaders Talk Artificial Intelligence", "Leaders Talk Create Value Through Integrity - 2024", "Leaders Talk Economic Outlook", "Leaders Talk Hari Anti Korupsi Sedunia", "Leaders Talk Intrapreneurship Result Oriented", "Leaders Talk Intrapreneurship Sense of Ownership", "Leaders Talk Kenali Demam Berdarah dan Pencegahannya", "Leaders Talk Lesson from Eiger - From Local to the World", "Leaders Talk Nutrition Day 2024", "Leaders Talk We Aim for Customer Excellence Collaboration", "Leaders Talk We Put People First Be A Buddy", "Legal", "Legal - Amendment to Indonesian Shipping Law 101", "Legal - Implementation of Shipping Law", "Legal - Indonesia Capital Market", "Legal - Overview of Indonesia Employment Law", "Legal - Personal Data Protection", "Legal - Teknik Merancang Kontrak", "Liner - Basic Operation Transshipment", "Liner Commercial", "Liner Commercial - Basic Shipping 07 Term of Shipment", "Liner Commercial - Basic Shipping 1 Service Excellence", "Liner Commercial - Basic Shipping 10 Liner Services", "Liner Commercial - Basic Shipping 11 Basic Container", "Liner Commercial - Basic Shipping 12 Dangerous Goods", "Liner Commercial - Basic Shipping 13 Reefer Handling", "Liner Commercial - Basic Shipping 14 Breakbulk Cargo Project", "Liner Commercial - Basic Shipping 15 Cost of Failure Branch", "Liner Commercial - Basic Shipping 16 Sales Activity Customer Profile", "Liner Commercial - Basic Shipping 2 Product Knowledge and Cargo Shipment", "Liner Commercial - Basic Shipping 3 FAQ for Customer", "Liner Commercial - Basic Shipping 4 Basic Cargo Knowledge", "Liner Commercial - Basic Shipping 6 Bill of Lading", "Liner Commercial - Basic Shipping 8 Terminal Productivity Operation Pattern", "Liner Commercial - Basic Shipping Booking Process", "Liner Commercial - Basic Shipping Incoterm 2020", "Liner Commercial - Basic Shipping Marine Insurance", "Liner Commercial - Basic Shipping Meratus Extra VAS", "Liner Commercial - Basic Shipping Pengetahuan Kepabeanan dan Exim untuk Pelayaran", "Liner Commercial - Body Language", "Liner Commercial - Business Development", "Liner Commercial - Calculate Rate Freight", "Liner Commercial - Customer Contract Key Account Management", "Liner Commercial - Decision Making Unit", "Liner Commercial - Halal Cargo Assurance", "Liner Commercial - Know Your Customer", "Liner Commercial - Marine Cargo Insurance", "Liner Commercial - SOC Business", "Liner Commercial Handling Complaint", "Liner Ops", "Liner Ops - Container Procurement Methods Overview", "Liner Ops - Eva Line Empty Evacuation Plan", "Liner Ops - IDLE Container", "Liner Ops - Imbalance Mechanism Understanding Management", "Liner Ops - MFEC Basic of Navigation Passage plan", "Liner Ops - MFEC Operational Ship Performance", "Liner Ops - MFEC Voyage Efficiency knowledge", "Liner Ops - MFEC Weather Chart and Meteorology Analysis", "Liner Ops - PI Logistic Dwelling Time and Container Cycle", "Liner Ops - Seals Container Specification Depot Operation", "Liner Ops - Ship Stability", "Liner Ops - Voyage Proforma Scheduling Introduction", "Liner Trade", "Liner Trade - 01 Route Profitability", "Liner Trade - Annual Budgeting", "Liner Trade - Contribution Margin Engine Time Charter Equivalent and VOE", "Liner Trade - Customer Segmentation", "Liner Trade - Joint Slot 2024", "Liner Trade - Slot Cost", "Liner Trade - Tier Pricing", "Logistics", "Logistics - Cargo Document Handling", "Logistics - Claim and Insurance", "Logistics - ISO License Audit Process", "Logistics - Penerapan SJPH dan Penyelia Halal", "Logistics - Petty Cash BS", "Logistics - Vendor Management Sea Freight Domestic", "Management by Objective Malik", "Managing Conflicts Malik", "Managing Conversation Malik", "Managing Meeting Malik", "Managing Superiors and Colleagues Malik", "Managing Yourself Malik", "MariApps - Plan Management System", "M-Cheetah Game 2 Socialization", "MELISA - Booking Module", "MELISA - Customer Master", "MELISA - Customer Tier Pricing DSS", "MELISA - Documentation Module", "MELISA - Invoice Data Reference", "MELISA - Invoicing Module v0", "MELISA - Node Master 2024", "MELISA - OnOff Hire Module 2024", "MELISA - Penalty Booking", "MELISA - Port Call Report 2024", "MELISA - Quick Manual Container Movement and Status", "MELISA - Rate Report", "MELISA - Rating Method", "MELISA - Service Contract", "MELISA - Surcharge 2025", "MELISA - Training for SPU", "MELISA - VAS Booking", "Meratus Academy", "Meratus s New Vision and Mission", "Module PS [Others]", "M-One Customer Journey", "M-One Induction M-One for Internal Stakeholders", "MQS P3W Awareness 2026", "MSA", "MSA - Management System Data Base PBM", "MSA - Pelatihan Dasar Pengoperasian Ruber TYRE GANTRY", "MSA - Pelatihan Dasar Pengoperasian Side Loader Single Handler", "MSA - Pelatihan Harbour Mobile Crane", "MSA - Penanganan Container", "MSA - Penanganan Reefer Container", "MSA - Penanganan Uncontainerized", "MSA - Penanggulangan Kebakaran dan Pengenalan APAR", "MSA - Pendapatan Biaya PBM", "MSA - Pengetahuan Bongkar Muat 2023", "MSA - Pengetahuan Claim PBM", "MSA - Pengetahuan Container", "MSA - Pengetahuan Stowage Plan", "MSA - Pengoperasian Dasar Ship to Shore", "MSA - Perencanaan Bongkar Muat", "MSA - Perencanaan Kebutuhan TKBM", "MSA - Perencanaan Layout CY", "MSA - Stacking Container di CY", "MSM", "MSM - Painting Maintenance", "MSM Machinery - 01 Aux Mach Fuel System - 2025", "MSM Machinery - 01 Engine Performance Normal Operation 2026", "MSM Machinery - 01 Engine Plan Fuel System", "MSM Machinery - 02 Aux Mach Charge Air System", "MSM Machinery - 02 Engine Performance Overload Engine Operation", "MSM Machinery - 02 Engine Plan Charge Scavenge Air System", "MSM Machinery - 03 Engine Performance - Function of Collecting Data", "MSM Machinery - 03 Engine Plan Compression System", "MSM Machinery - 03 Fresh Water Generator 2026", "MSM Machinery - 04 Aux Mach Refrigerator 2026", "MSM Machinery - 04 Engine Performance - Heat Balance Efficiency", "MSM Machinery - 04 Engine Plan Starting Air System 2026", "MSM Machinery - 05 Aux Mach Controllable Pitch Propeller", "MSM Machinery - 05 Engine Performance Monitoring of Engine Performance", "MSM Machinery - 05 Engine Plan Cooling System", "MSM Machinery - 06 Aux Mach Lubricating Oil System 2026", "MSM Machinery - 06 Engine Performance Low load - Slow Steaming", "MSM Machinery - 06 Engine Plan Lubricating System 2026", "MSM Machinery - 07 Aux Mach Cooling System", "MSM Machinery - 08 Aux Mach Starting System 2026", "MSM Machinery - 09 Aux Mach Purification System", "MSM Marine - 01 Safety Of Life At Sea 2026", "MSM Marine - 02 Marine Polution 2026", "MSM Marine - 03 STCW 2010 - 2026", "MSM Marine - 04 MLC 2006 - 2026", "MSM Marine - 05 ISM Code 2026", "MSM Marine - 06 ISPS Code 2026", "MSM Marine - 07 Ballast Water Management 2026", "MSM Marine - 08 Garbage Management 2026", "MSM Marine - 09 Bridge Resource Management 2026", "MSM Marine - 10 Safety Drill 2026", "MSM Marine - 12 Class Survey 13 Ship Certificates 2026", "MSM Marine - 14 Crewing Management Certificate 2026", "MSM Marine - 15 UU Pelayaran 2026", "MTM", "NOVA - User Manual Procedure", "OKR Certification Leadership and Goal Setting Module 1", "OKR Certification Leadership and Goal Setting Module 2", "OKR Certification Leadership and Goal Setting Module 3", "OKR Certification Leadership and Goal Setting Module 4", "P3W Asuransi dan Klaim V 01", "Personal Development - 15 Management Essential to Become Good Manager - 2024", "Personal Development Computer Posture", "Personal Development Etika Pergaulan", "Problem Solving Malik", "Procurement", "Procurement - Basic Knowledge", "Procurement - D365 Inventory Request dan Purchase Request", "Procurement - D365 Permintaan Pembelian Aktiva Tetap PPAT", "Procurement - D365 Request for Quotation Purchase Order", "Procurement - Distribution Management", "Procurement - Finance for Non Finance", "Procurement - Inventory Management", "Procurement - Negotiation in Procurement", "Procurement - Warehouse Management", "Procurement MSM", "Procurement MSM - Econnect Flow Functionalities", "Procurement MSM - Safety Equipment Service", "Quality Awareness", "Risk Management for Level 12 Above", "Root Cause Analysis for Level 10 Above", "Safety Leadership 2024", "Sistem Informasi Ketidaksesuaian dan Pengembangan SIKaP", "SM - Docking Contract", "SM - Docking D-12", "SM - MariApps COMPASS Change Management", "SM Docking Management - Module 1 Background and Introduction to Dry Docking", "SM Docking Management - Module 2 Project Management", "SM Docking Management - Module 3 Planning and Specification", "SM Docking Management - Module 4 Tendering for Dry Dock Work", "SM Docking Management - Module 5 Dry Dock Preparation Execution and Supervision", "SM Docking Management - Module 6 Docking Undocking and Completion of Project", "SM Workshop - Generator", "SM Workshop - Global Maritime Distress Safety System", "Sosialisasi Aktivasi Registrasi CORETAX", "Sosialisasi BPJS Kesehatan Segmen PPU", "Sosialisasi BPJS Ketenagakerjaan - Manfaat Layanan BPJS", "Stakeholder Management", "The Will to Perform Malik", "Trucking", "Trucking - Abnormality Monitoring", "Trucking - Account Payable and DC Admin", "Trucking - Account Receivable and DC Admin", "Trucking - Backlog Management", "Trucking - Basic Investigation Root Cause Analysis", "Trucking - Basic Monitoring by GPS", "Trucking - Basic Transport Analyst", "Trucking - Basic Trucking Knowledge", "Trucking - Business Offering RFQ Payment Trip Cost Fuel", "Trucking - Business Overview", "Trucking - Control Tower", "Trucking - Control Tower Reporting", "Trucking - Daily Inspection P2H", "Trucking - Database Driver Personnel Management", "Trucking - Document Control", "Trucking - Dokumen Legalitas", "Trucking - Driver Management", "Trucking - Driver Performance Evaluation", "Trucking - Driver Regulation Compliance", "Trucking - Inventory Management", "Trucking - Maintenance Planning Scheduling", "Trucking - MJT Operation Overview", "Trucking - QSHE Operational Trucking", "Trucking - Recruitment Screening Driver", "Trucking - Risk Assesment HIRADC", "Trucking - Road Hazard Mapping", "Trucking - Safety Analysis Proactive Risk Identification", "Trucking - Safety Observation Card", "Trucking - Warehouse Management", "Tutorial Pelaporan SPT Tahunan Karyawan dan Pemadanan NIK-NPWP", "Vendor Management VMT and Sales Guidance"
 ];
 const EXISTING_CLEANED = RAW_EXISTING_MODULES.map(s => s.toLowerCase().replace(/[^a-z0-9]/g, ''));
 
-const TOPIC_OBJECTIVES = {
-  // Asset Charter
-  "introduction to asset & charter business": "Understand about Asset & Charter business in summary, providing a high-level view of operations and strategic goals.",
-  "non vessel asset management (truck & trailer)": "Truck Chassis & Head Specifications: Understand technical specs and compatibility for operation base. Trailer Types (Skeleton type, Flatbed, Wingbox): Understand technical specs and different function of trailer.",
-  "super structure component inspection": "Understand the general step of inspection of super structure component to ensure equipment reliability and safety.",
-  "engine component inspection": "Understand the general step of inspection of engine component to prevent failure and extend asset lifecycle.",
-  "sale & disposal process": "Asset Disposal Criteria & Decision Making: Understand which assets qualify for disposal and the decision process. Sale Option vs Scrap vs Reuse. Documentation & Accountable compliance.",
-  "imo regulation - solas": "Have strong baseline of maritime regulations regarding the Safety of Life at Sea to ensure full compliance.",
-  "imo regulation - marine pollution": "Have strong baseline of maritime regulations (MARPOL) to prevent environmental hazards and comply with international laws.",
-  "imo regulation - colreg": "Have strong baseline of maritime regulations regarding Collision Regulations to maintain navigational safety.",
-  "brm (bridge resource management)": "Have knowledge to execute inspection and utilize Bridge Resource Management principles effectively.",
-  "erm (engine resource management)": "Have knowledge to execute inspection and utilize Engine Resource Management to optimize engine room operations.",
-  "use of digital inspection & documentation software": "Menggunakan aplikasi digital untuk inspeksi dan laporan (misalnya software Class, Safety Management Systems) & mampu menyusun laporan secara standar.",
-  "engine performance knowledge": "Ability to analyze if vessel is underperforming or running inefficiently through comprehensive data tracking.",
-  "regulatory compliance": "Understanding Regulatory requirement related to environment such as EEXI, CII, EU ETS, EU/UK MRV, SEEMP.",
-  "vessel reporting system": "Understanding data flow from Meratus reporting system such as DNA, M-vision, and ensuring proper data base for consumption & emission.",
-  "overview chartering business": "Understanding overview of Chartering business related to vessel speed, consumption, reporting, and performance related to TCD.",
-  "retrofit/ optimization project": "Ability to assess & analyze suitability of Retrofitting/Optimization potential for fleet modernization.",
-  "fraud awareness": "Understanding gap and potential for fuel theft/fraud and implementing proactive monitoring strategies.",
-  "lesson learned": "Identify critical incidents, decisions, and turning points during project execution; Evaluate past project outcomes to distinguish between root causes of success and failure.",
-  "budgeting, cost control & market analysis": "Identify potential all cost in SnP in order to select most efficient way for delivery and implement cost control to monitor expenditures.",
-  "reflagging and change of ownership": "Ensuring the effectiveness of process of reflagging and change of ownership by managing every step and compliance to all regulation.",
-  "moa : clauses, negosiation": "Evaluate and negotiate the terms and conditions of the Memorandum of Agreement (MoA) to ensure alignment with company policies.",
-  "ism code": "Pemahaman komprehensif terkait ISM Code untuk memastikan keselamatan maritim dan pencegahan polusi.",
-  "iso 9001 - quality management": "Pemahaman QMS (Quality Management System) untuk standarisasi mutu layanan dan proses bisnis perusahaan.",
-  "iso 45001 - safety & health management": "Pemahaman OHSMS (Occupational Health and Safety Management Systems) guna menjamin lingkungan kerja yang aman.",
-  "iso 14001 - environment management": "Pemahaman EMS (Environmental Management Systems) untuk meminimalisir dampak lingkungan dari operasional.",
-  "iso 28001 - supply chain": "Pemahaman Supply Chain Security Management Systems untuk melindungi rantai pasok maritim.",
-  "contractor safety management system": "Pemahaman persyaratan CSMS untuk memastikan kontraktor bekerja sesuai standar keselamatan Meratus.",
-  "new building management": "Understand how to establish and maintain a highly efficient, secure, and sustainable building management system.",
-  "basic understanding of marine insurance": "Understanding the role of H&M and P&I Insurance and how operational actions might affect insurance claims or liabilities.",
-  "commercial chartering & business development": "Market research & Data Analytics: Conducting effective market research and applying data analytics techniques to support strategic decision-making.",
-  "charter party agreement": "Understand party agreement in term of their structure, key clauses, legal implications, and operational impact.",
-  "tender management": "Essential knowledge and practical skills to manage the tendering process effectively, from preparation to contract award.",
-  "voyage estimation": "Able to perform accurate voyage estimations, including cost analysis, fuel consumption, port charges, and time calculations.",
-  "cargo stowage & stability": "Get solid understanding of ship stability principles, including factors affecting stability, methods of calculation, and regulatory requirements.",
-  "cargo lifting & securing": "Lifting Calculation & Rigging Arrangement Plan: Understand how to perform accurate lifting calculations and develop safe rigging arrangement plans.",
-  "dg cargo handling": "Understanding of DG classification, packaging, labeling, documentation, and emergency response procedures (IMDG Code).",
-  "chartering operations": "Basic Operation Management : Understand basic activities of operations i.e loading/unloading, shipping document, bunker process, agency, reefer.",
-
-  // Liner / Trade / Commercial
-  "liner services": "Understand Liner Services, Routes, and network coverage capabilities within the Meratus ecosystem.",
-  "basic container": "Understand definition, types, function, and cost implications of standard and specialized Containers.",
-  "product knowledge reefer & reefer handling": "Understand technical specifications, temperature controls, and proper handling procedures for Reefer cargo.",
-  "time charter equivalent": "Understand definition and Concept of Time Charter Equivalent (TCE) for evaluating vessel profitability.",
-  "bill of lading": "Understand Inbound, Outbound Manifest, Clearance Document, and legal standing of the Bill of Lading.",
-  "incoterm liner (2020)": "Understand International Commercial Terms in Shipping Industry and their risk/cost transfer points.",
-  "service excellence": "Understand the importance of Service Mindset - Service Orientation and implement Service Excellence to Customers.",
-  "pricing management": "Understand definition, business process, and pricing management, segmentation, tier pricing (freight, surcharge).",
-  "route profitability": "Understand component and how to calculate Route Profitability to ensure sustainable and high-margin operations.",
-  "shorterm pricing & long-term pricing trade off": "Understand and able to define pricing strategy both short and long term to optimize yield and market share.",
-  "vsa cooperation": "Understand how to design a Vessel Sharing Agreement (VSA) based on competition, market, and legal agreements with partners.",
-  "competitor's analysis": "Understand the scope of competition level in every service & route in term of capacity, market share, rate, volume.",
-
-  // Logistics / Terminal / CLC / Trucking
-  "business process management logistics": "Understanding MGLog business process from end-to-end to ensure smooth service delivery.",
-  "product mglog - sea freight domestic": "Understanding basic knowledge, routing, and commercial models about Sea Freight Domestic product.",
-  "p3w sales": "Understanding Policy, Process, Procedure & Working Instruction governing Sales operations and compliance.",
-  "tender management & strategy": "Understanding strategic approaches and competitive positioning to successfully win and execute tenders.",
-  "type of terminal": "Understanding of type terminal, classification, and function: Container, Multipurpose, Conventional / Traditional.",
-  "terminal crane working plan": "Understanding of Crane Working Plan (CWP) process: Stowage Instruction, Crane Intensity, Deployment, and maximizing efficiency.",
-  "terminal berthing allocation": "Understanding of Berthing Allocation: Service schedule vessel classification, proforma planning, and QA assignments.",
-  "idle container": "Understanding Importance of FIFO concept to reduce container idle across all areas and analyzing associated costs.",
-  "depot and trucking management": "Understanding how to manage Vendor Depot and Trucking, relocation process, and measuring vendor SLA/SLG.",
-  "port info & port restriction": "Understand Port Info to support safe, efficient, and well-planned vessel operations based on each port's unique characteristics.",
-  "bunker quantity survey": "Carry out bunker tank measurement using proper methods (sounding, MFM) to verify actual quantity and minimize disputes.",
-  "pengetahuan depo": "Memberikan pemahaman dasar tentang fungsi, struktur, dan proses kerja harian di depo kontainer.",
-  "pengetahuan stuffing / stripping": "Memahami proses pemuatan (stuffing) dan pembongkaran (stripping) kontainer sesuai standar operasional yang aman.",
-  "yard management system": "Memahami sistem manajemen lapangan kontainer (YMS) untuk meningkatkan produktivitas dan ketertelusuran unit.",
-  "pengetahuan repair container": "Memberikan pemahaman dasar tentang jenis-jenis kerusakan kontainer dan prosedur perbaikannya sesuai standar industri.",
-  "iicl": "Memahami standar perbaikan kontainer berstandar internasional berdasarkan pedoman Institute of Container Lessors (IICL).",
-  "safety operation and mechanical awareness (soma) ertg": "Meningkatkan pemahaman keselamatan dan prinsip dasar mekanikal pada pengoperasian alat berat ERTG.",
-  "maintenance management": "Meningkatkan kemampuan mengelola kegiatan pemeliharaan alat berat secara sistematis, terencana, dan cost-efficient.",
-  "order management": "Memahami proses order management (TMS) mulai dari penerimaan sampai dengan penyelesaian order dan validasi.",
-  "claim handling": "Memahami proses penanganan claim muatan mulai dari kejadian, investigasi, pengumpulan data hingga penyelesaian.",
-  "driver performance & evaluation": "Memahami standard operasional untuk dapat memberikan penilaian kinerja dan evaluasi komprehensif bagi driver.",
-  "profitability analysis (route classification)": "Memahami cara menganalisa profitabilitas per rute secara presisi untuk optimalisasi marjin operasi Trucking.",
-  "tyre management": "Memahami pengelolaan ban truk/alat berat mulai dari pengadaan, penyimpanan, perawatan, hingga proses disposal.",
-
-  // Corporate (Finance, HRD, IT, BPM, Legal)
-  "business process management framework": "Understanding the BPM lifecycle and its strategic role in driving operational improvements and standardization.",
-  "customer centric in shipping business": "Aligning shipping services and processes with customer needs to enhance satisfaction and loyalty in a competitive market.",
-  "project management": "Knowledge of project lifecycle stages and techniques for managing time, scope, resources, and risk effectively.",
-  "branding guideline": "Equip participants with a comprehensive understanding of the organization’s brand identity, values, and visual standards.",
-  "crisis communication": "Prepare participants to effectively manage and communicate during organizational crises to protect reputation and trust.",
-  "d365 introduction for new joiner - accounting & reporting": "To give understanding the GL module of Microsoft Dynamics 365 and related Accounting & Reporting functions.",
-  "advance accounting - consolidation": "Obtaining an understanding of principle in consolidation reporting and able to create consolidated financial statements.",
-  "financial proforma analysis": "Ability to understand and grasp Proforma results to identify and prepare strategies that affect better financial outcomes.",
-  "invoice processing": "Understanding of accounts payable concepts (3-way/4-way matching) and resolving invoice discrepancies efficiently.",
-  "credit risk assessment & risk mitigation": "Evaluate customer creditworthiness, enforce credit controls, and optimize policies to balance risk and business growth.",
-  "quality of earnings on ebitda basis": "Project specific strategic growth analysis: Potential Merger/Acquisition and Business Collaboration via financial modeling.",
-  "merumuskan strategi dan kebijakan manajemen sumber daya manusia": "Memahami proses perumusan strategi dan kebijakan SDM yang selaras dan mampu mendorong pencapaian tujuan bisnis perusahaan.",
-  "hr budgeting": "Mampu menyusun dan memantau anggaran SDM yang efektif dan efisien berdasarkan data dan proyeksi kebutuhan organisasi.",
-  "menyusun uraian jabatan": "Mampu menyusun job description secara sistematis dan sesuai standar untuk mendukung tata kelola manajemen SDM.",
-  "menyusun standar operasional prosedur (sop)": "Dapat menyusun SOP operasional rekrutmen/HR yang efektif dan efisien sebagai pedoman dan standar kerja baku.",
-  "mengelola program suksesi": "Mampu menyusun dan mengelola program suksesi (Succession Planning) untuk memastikan keberlanjutan kepemimpinan organisasi.",
-  "agile - scrum introduction": "Apply Scrum principles, roles, events, and artifacts to participate effectively in agile ceremonies and sprint deliveries.",
-  "it audit review (cisa)": "Analyze IT controls against CISA domains, identify potential control deficiencies, and gather audit evidence for compliance.",
-  "programming languages : python": "Develop, test, and debug moderately complex Python applications/scripts, applying OOP principles and API integrations.",
-  "penetration testing": "Understanding penetration testing methodology and standards. Creating proactive penetration testing procedures and responses.",
-  "corporate law & company secretarial": "Understanding BoD/BoC mechanisms, corporate actions, and statutory filings required by corporate law.",
-  "privacy & data protection": "GDPR/PDP fundamentals; DPIA, cross-border data transfer, vendor clauses, incident response, and breach protocols.",
-  "strategic sourcing": "Developing advanced strategies to source goods/services efficiently from the best suppliers while optimizing costs.",
-  "request for quotation & purchase order": "Mastering the RFQ functionality to request competitive bids and effectively generating POs within the procurement system."
+const getDomainFallback = (category, source) => {
+  if (source === 'HRD' || source === 'Finance' || source === 'IT' || source === 'BPM' || source === 'CorpCom' || source === 'Legal' || source === 'Procurement') return 'Corporate Support';
+  if (source === 'Logistics' || source === 'Trucking') return 'Logistics & Supply Chain';
+  if (source === 'MSM' || source === 'Workshop' || source === 'Crewing') return 'Ship Management & Technical';
+  if (source === 'CLC' || source === 'MSA' || source === 'OJA') return 'Terminal & Depot Operations';
+  if (source === 'Drybulk' || source === 'Asset Charter') return 'Bulk & Asset Chartering';
+  return 'Enterprise General';
 };
 
-// ==========================================
-// 3. ENTERPRISE ARCHITECTURE
-// ==========================================
-const SBUS = [
-  'Asset Charter', 'Drybulk', 'Liner Commercial', 'Liner International',
-  'Liner Ops', 'Liner Trade', 'Logistics', 'HMM', 'Crewing', 'MSM',
-  'Workshop', 'CLC', 'MSA', 'OJA', 'Trucking',
-];
-const SFUS = [
-  'BPM', 'CorpCom', 'Finance', 'GA Asset Property', 'HRD',
-  'Internal Audit', 'IT', 'Legal', 'Procurement', 'Procurement MSM',
-];
-const ALL_UNITS = [...SBUS, ...SFUS];
-
-const DEPT_INFO = [
-  { full: 'Asset Charter', abbr: 'AC', type: 'SBU' },
-  { full: 'Drybulk', abbr: 'DB', type: 'SBU' },
-  { full: 'Liner Commercial', abbr: 'LC', type: 'SBU' },
-  { full: 'Liner International', abbr: 'LI', type: 'SBU' },
-  { full: 'Liner Ops', abbr: 'LO', type: 'SBU' },
-  { full: 'Liner Trade', abbr: 'LT', type: 'SBU' },
-  { full: 'Logistics', abbr: 'LOG', type: 'SBU' },
-  { full: 'HMM', abbr: 'HMM', type: 'SBU' },
-  { full: 'Crewing', abbr: 'CRW', type: 'SBU' },
-  { full: 'MSM', abbr: 'MSM', type: 'SBU' },
-  { full: 'Workshop', abbr: 'WS', type: 'SBU' },
-  { full: 'CLC', abbr: 'CLC', type: 'SBU' },
-  { full: 'MSA', abbr: 'MSA', type: 'SBU' },
-  { full: 'OJA', abbr: 'OJA', type: 'SBU' },
-  { full: 'Trucking', abbr: 'TRK', type: 'SBU' },
-  { full: 'BPM', abbr: 'BPM', type: 'SFU' },
-  { full: 'CorpCom', abbr: 'CC', type: 'SFU' },
-  { full: 'Finance', abbr: 'FIN', type: 'SFU' },
-  { full: 'GA Asset Property', abbr: 'GA', type: 'SFU' },
-  { full: 'HRD', abbr: 'HRD', type: 'SFU' },
-  { full: 'Internal Audit', abbr: 'IA', type: 'SFU' },
-  { full: 'IT', abbr: 'IT', type: 'SFU' },
-  { full: 'Legal', abbr: 'LEG', type: 'SFU' },
-  { full: 'Procurement', abbr: 'PROC', type: 'SFU' },
-  { full: 'Procurement MSM', abbr: 'PMSM', type: 'SFU' },
-];
-
-const INITIAL_CATEGORY_DESCRIPTIONS = {
-  'Vessel Chartering & Asset Mgt': 'Focuses on strategic chartering, asset lifecycle management, fleet commercial operations, and MoU negotiations.',
-  'Marine Engineering & Maintenance': 'Covers technical inspection, maintenance, troubleshooting, and overhaul of marine engines, vessel superstructures, and components.',
-  'Marine QSHE, Safety & Compliance': 'Encompasses maritime safety regulations (SOLAS, MARPOL), incident investigation, risk mapping, and safety management systems.',
-  'Asset & Fleet Management': "Strategies and processes for managing the company's fixed assets, vehicle fleets, and vessel disposal/sale.",
-  'Vessel Operations & Performance': 'Focuses on daily vessel operations, fuel/bunker management, voyage optimization, stowage planning, and performance analytics.',
-  'IT Engineering, Security & Architecture': 'Covers software development, network infrastructure, cybersecurity, cloud architecture, and data engineering.',
-  'Corporate Finance, Tax & Reporting': 'Includes advanced financial modeling, budgeting, taxation, consolidated reporting, and cash flow management.',
-  'Corporate Legal & Governance': 'Covers corporate law, regulatory compliance, contract management, dispute resolution, and insurance claim handling.',
-  'Chartering & Commercial Shipping': 'Focuses on maritime trade terms, voyage estimation, tender management, and managing commercial shipping contracts.',
-  'Ship Management & Technical Ops': 'Involves dry-docking processes, new building projects, technical ship specifications, and shipyard coordination.',
-  'Drybulk Operations & Commercial': 'Specialized training for Drybulk and Tug & Barge operations, including transloading, bulk cargo handling, and specific MDM business processes.',
-  'Liner Commercial & Account Mgt': 'Focuses on liner sales, pricing management, customer relations, complaint handling, and CRM operations.',
-  'Logistics & Forwarding Operations': 'Covers end-to-end logistics, customs clearance, freight forwarding (Air/Sea), and related documentation (Bills of Lading).',
-  'Liner Trade & Pricing Strategy': 'Advanced topics on route profitability, vessel slot agreements (VSA), yield management, and TCE analysis.',
-  'Liner Network & International Ops': 'Focuses on international deployment, competitor analysis, international agency management, and network design.',
-  'Container Depot & Repair Operations': 'Operations related to container stripping/stuffing, yard management, IICL repair standards, and reefer PTI.',
-  'Terminal & Port Operations': 'Focuses on port restrictions, berth allocation, stevedoring processes, and terminal performance monitoring (BOR/YOR).',
-  'Working Capital, AR/AP & Treasury': 'Covers operational finance, invoice processing, days sales outstanding (DSO), and vendor payment procedures.',
-  'Agency Operations (HMM)': 'Specific processes for managing principal agency operations, documentation, and manifest handling for HMM.',
-  'Crew Management & Development': 'Focuses on MLC regulations, seafarer recruitment, payroll, emergency response for crew, and MariApps crewing systems.',
-  'Workshop Fabrication & Heavy Maintenance': 'Covers advanced welding, carpentry, heavy component overhauls, and production planning (PPIC) within workshops.',
-  'Heavy Equipment & Maintenance': 'Focuses on the safe operation and mechanical maintenance (SOMA) of heavy equipment like RTG, Reach Stackers, and Forklifts.',
-  'Terminal, Stevedoring & HE Ops': 'Integrated operations for terminal cargo handling, ship stability during loading, and heavy equipment orchestration.',
-  'Trucking & Land Transport': 'Covers order management, TMS applications, driver route planning, GPS abnormality tracking, and fleet dispatch.',
-  'Human Resources & Talent Management': 'Encompasses organizational design, talent acquisition, remuneration, industrial relations, and HR data analytics.',
-  'Business Process Management (BPM)': 'Focuses on process optimization (BPMN), agile methodologies, change management, and project tracking.',
-  'Corporate Communications & GA': 'Covers branding guidelines, internal/external communication, facility management, and general affairs.',
-  'Internal Audit & Compliance': 'Focuses on risk-based auditing, fraud detection, procedural compliance, and enterprise risk management.',
-  'Procurement & Vendor Management': 'Covers strategic sourcing, vendor performance reviews, P2P processes, and e-procurement systems (D365/MariApps).',
-};
-
-// ==========================================
-// 4. INTELLIGENT COMPRESSED DATA ENGINE
-// ==========================================
-const TAG_MAPPING = {
-  ALL: ALL_UNITS,
-  MARINE: ['Asset Charter', 'Drybulk', 'Liner Ops', 'MSM', 'Crewing', 'Liner Commercial', 'Liner International', 'Liner Trade', 'Internal Audit'],
-  TERMINAL: ['Liner Ops', 'CLC', 'MSA', 'OJA', 'Logistics', 'Internal Audit', 'Finance', 'IT'],
-  LOGISTICS: ['Logistics', 'Trucking', 'HMM', 'CLC', 'Finance', 'IT', 'Internal Audit'],
-  TECH: ['Workshop', 'MSM', 'CLC', 'MSA', 'OJA', 'Trucking', 'Procurement MSM', 'Asset Charter'],
-  CORP: ['BPM', 'CorpCom', 'Finance', 'GA Asset Property', 'HRD', 'Internal Audit', 'IT', 'Legal', 'Procurement'],
-  COMMERCIAL: ['Liner Commercial', 'Liner International', 'Liner Trade', 'Drybulk', 'Asset Charter', 'HMM', 'Logistics'],
-};
-
-function buildSeed(category, dataString, source) {
+const buildSeed = (category, dataString, source) => {
   const topics = dataString.split('|');
   const targets = new Set([source]);
-  const tags = [];
 
-  if (source === 'Asset Charter') tags.push('COMMERCIAL', 'TECH', 'MARINE', 'Legal', 'Finance');
-  if (source === 'Drybulk') tags.push('COMMERCIAL', 'MARINE', 'Finance', 'TERMINAL');
-  if (source === 'Liner Commercial' || source === 'Liner Trade' || source === 'Liner International')
-    tags.push('COMMERCIAL', 'Finance', 'MARINE', 'LOGISTICS', 'TERMINAL');
-  if (source === 'Logistics' || source === 'Trucking') tags.push('LOGISTICS', 'COMMERCIAL', 'Finance');
-  if (source === 'CLC' || source === 'MSA' || source === 'OJA') tags.push('TERMINAL', 'TECH', 'LOGISTICS');
-  if (source === 'MSM' || source === 'Workshop') tags.push('TECH', 'MARINE');
-  if (source === 'IT' || source === 'Finance' || source === 'HRD' || source === 'Legal' || source === 'BPM')
-    tags.push('CORP');
-
-  tags.forEach((tag) => {
-    if (TAG_MAPPING[tag]) TAG_MAPPING[tag].forEach((t) => targets.add(t));
-    else targets.add(tag);
-  });
-
+  // Expanded Targeting Logic
+  if (source === 'Asset Charter') ['Finance', 'Legal'].forEach(t => targets.add(t));
+  if (source === 'Drybulk') ['Finance', 'MSA'].forEach(t => targets.add(t));
+  if (source === 'Liner Commercial' || source === 'Liner Trade' || source === 'Liner International') {
+    ['Liner Ops', 'Finance', 'Logistics', 'CLC'].forEach(t => targets.add(t));
+  }
+  if (source === 'Logistics' || source === 'Trucking') ['Finance', 'IT'].forEach(t => targets.add(t));
+  
   return topics.map((topic) => {
     let track = 'Intermediate'; 
-    let funcType = 'Operations'; 
-
     const t = topic.toLowerCase();
-    const c = category.toLowerCase();
-    const s_lower = source.toLowerCase();
-    const combined = `${c} ${t} ${s_lower}`;
     
-    // LEVEL CLASSIFICATION
-    const advanceKeywords = ['advance', 'strategic', 'modeling', 'governance', 'due diligence', 'route profitability', 'leadership', 'masterclass', 'expert', 'forecasting', 'optimization'];
-    const basicKeywords = ['basic', 'introduction', 'induction', 'overview', 'awareness', 'fundamental', 'pengenalan', 'dasar', 'general', 'concept', 'guideline', 'understanding', 'memahami', 'mengenal', 'knowledge'];
+    if (t.includes('advance') || t.includes('strategic') || t.includes('modeling') || t.includes('management system')) track = 'Advance';
+    else if (t.includes('basic') || t.includes('introduction') || t.includes('awareness') || t.includes('overview') || t.includes('pengenalan')) track = 'Basic';
 
-    if (advanceKeywords.some((k) => combined.includes(k))) track = 'Advance';
-    else if (basicKeywords.some((k) => combined.includes(k))) track = 'Basic';
-
-    // FUNCTION CLASSIFICATION
-    const devKeywords = [
-      'strategy', 'strategi', 'development', 'pengembangan', 'design', 'desain', 'architecture', 'arsitektur',
-      'planning', 'perencanaan', 'analytic', 'analisa', 'analysis', 'research', 'riset',
-      'optimization', 'optimalisasi', 'project', 'proyek', 'merumuskan', 'menyusun', 'merancang',
-      'leadership', 'talent', 'suksesi', 'competency', 'kompetensi', 'evaluation', 'evaluasi',
-      'route profitability', 'pricing management', 'network design', 'budgeting & forecasting',
-      'feasibility', 'business plan', 'ui/ux', 'programming', 'developer', 'software testing',
-      'agile', 'scrum', 'data modeling', 'machine learning', 'artificial intelligence', 'tce analysis',
-      'pnl analysis', 'competitor', 'cost control', 'cost analysis'
-    ];
-
-    const adminKeywords = [
-      'admin', 'administrasi', 'finance', 'financial', 'tax', 'pajak', 'pph', 'reporting', 'laporan',
-      'legal', 'hukum', 'governance', 'compliance', 'kepatuhan', 'audit', 'iso', 'qshe', 'hse',
-      'document', 'dokumen', 'manifest', 'billing', 'invoice', 'tagihan', 'receivable', 'payable',
-      'ar & ap', 'ap/ar', 'treasury', 'claim', 'klaim', 'insurance', 'asuransi', 'payroll', 'penggajian',
-      'bpjs', 'jaminan sosial', 'procurement', 'purchasing', 'vendor management', 'contract', 'kontrak',
-      'inventory', 'warehouse', 'stock', 'customs', 'kepabeanan', 'license', 'lisensi', 'halal',
-      'petty cash', 'reconciliation', 'rekonsiliasi', 'dso', 'dpo', 'legalitas', 'secretary', 'regulation', 'regulasi'
-    ];
-
-    if (devKeywords.some(k => combined.includes(k))) funcType = 'Development';
-    else if (adminKeywords.some(k => combined.includes(k))) funcType = 'Administration';
-
-    if (source === 'HRD') {
-      if (t.includes('merumuskan') || t.includes('menyusun') || t.includes('merancang') || t.includes('talent') || t.includes('suksesi') || t.includes('competency') || t.includes('evaluasi') || t.includes('design')) funcType = 'Development';
-      else if (t.includes('administrasi') || t.includes('payroll') || t.includes('tax') || t.includes('bpjs') || t.includes('jaminan sosial') || t.includes('data') || t.includes('perjalanan')) funcType = 'Administration';
-      else funcType = 'Operations';
-    }
-    if (source === 'IT') {
-      if (c.includes('support') || t.includes('support') || t.includes('troubleshoot') || t.includes('monitoring') || t.includes('incident')) funcType = 'Operations';
-      else if (t.includes('audit') || t.includes('policy') || t.includes('governance') || t.includes('management system') || t.includes('cisa')) funcType = 'Administration';
-      else funcType = 'Development';
-    }
-    if (['Finance', 'Legal', 'Internal Audit', 'Procurement', 'Procurement MSM'].includes(source)) {
-      if (t.includes('analysis') || t.includes('strategy') || t.includes('budgeting') || t.includes('forecasting') || t.includes('business acumen') || t.includes('feasibility') || t.includes('sourcing')) funcType = 'Development';
-      else funcType = 'Administration';
-    }
-    if (source === 'CorpCom') {
-      if (t.includes('event') || t.includes('photographic') || t.includes('videography')) funcType = 'Operations';
-      else funcType = 'Development';
-    }
-    if (source === 'BPM') {
-      if (t.includes('sikap') || t.includes('report')) funcType = 'Administration';
-      else funcType = 'Development';
-    }
-
-    const strictOps = ['handling', 'inspection', 'inspeksi', 'bongkar muat', 'maintenance', 'repair', 'stevedoring', 'soma', 'equipment', 'driver', 'trucking knowledge', 'sales activity', 'vessel operation', 'port info'];
-    if (strictOps.some(k => t.includes(k))) {
-      if (!['IT', 'Finance', 'Legal', 'HRD'].includes(source)) funcType = 'Operations';
-    }
-
-    // CHECK IF EXISTING IN DB
     const cleanT = t.replace(/[^a-z0-9]/g, '');
     const isExt = (cleanT.length > 3 && EXISTING_CLEANED.some(m => m.includes(cleanT) || cleanT.includes(m))) ? 'Yes' : 'No';
     
-    // FETCH DESCRIPTION DICTIONARY
-    const defaultDesc = `Comprehensive learning module covering standard practices, operational guidelines, and strategic applications for ${topic.toUpperCase()} within the ${category} domain.`;
-    const descObj = TOPIC_OBJECTIVES[t] || defaultDesc;
+    // Domain Mapping Logic
+    let domainStr = getDomainFallback(category, source);
+    if (source.includes('Liner')) {
+      const linerMatch = LINER_DOMAINS.find(d => d.name.toLowerCase().includes(t.split(' ')[0]) || t.includes(d.name.toLowerCase().split(' ')[0]));
+      if (linerMatch) domainStr = linerMatch.id; 
+      else domainStr = 'Liner Specialized'; // Fallback for unmapped Liner specific topics
+    }
 
     return {
       id: crypto.randomUUID(),
       c: category,
+      d: domainStr,
       t: topic.trim(),
-      desc: descObj,
+      desc: `Comprehensive enterprise learning module covering standard practices and guidelines for ${topic.trim()} within the ${category} scope.`,
       lvl: track,
-      s: source,
       tg: Array.from(targets),
-      func: funcType, 
-      isExt: isExt,
+      isExt: isExt
     };
   });
-}
+};
 
 const seedRawData = [
   ...buildSeed('Vessel Chartering & Asset Mgt', 'Introduction to Asset & Charter Business|Sale & Disposal Process|MOA : Clauses, Negosiation|Supporting Process/ Delivery Process|SnP General/ Ship Particular|Introduction of Chartering|Commercial Chartering & Business Development|Market research & Data Analytics|Charter Party Agreement|Tender management|Customer relationship management|Feasibility Study & Business Plan|Budgeting|Negotiation|Voyage Estimation', 'Asset Charter'),
@@ -409,31 +266,9 @@ const seedRawData = [
   ...buildSeed('Procurement & Vendor Management', 'Negotiation in Procurement|Vendor Management|Cost Analysis & Budgeting|Strategic Sourcing|Finance for Procurement|Stakeholder Management|Product and Product release|Buyer Group Concept|Inventory Request & Purchase Request|Request for Quotation & Purchase Order|Purchase Received|Financial dimension|Warehouse|Negotiation in Procurement MSM|Vendor Management MSM|Cost Analysis & Budgeting MSM|Strategic Sourcing MSM|Finance for Procurement MSM|Stakeholder Management MSM|Requestion process|Purchase Order Process including vessel allocation|Receiving Process|E-Connect|Product and product release MSM', 'Procurement'),
 ];
 
-const deduplicateSeedData = (data) => {
-  const map = new Map();
-  data.forEach((item) => {
-    const key = item.t.trim().toLowerCase();
-    if (map.has(key)) {
-      const existing = map.get(key);
-      const sourceSet = new Set(existing.s.split(', '));
-      sourceSet.add(item.s);
-      existing.s = Array.from(sourceSet).join(', ');
-      item.tg.forEach((t) => existing.tg.add(t));
-    } else {
-      map.set(key, { ...item, tg: new Set(item.tg) });
-    }
-  });
-  return Array.from(map.values()).map((item) => ({
-    ...item,
-    tg: Array.from(item.tg),
-  }));
-};
+// Combine standard explicit Liner Modules with the dynamically generated massive Enterprise list
+const DEDUPLICATED_CATALOG = Array.from(new Map(seedRawData.map(item => [item.t.trim().toLowerCase(), item])).values());
 
-const DEFAULT_TOPICS = deduplicateSeedData(seedRawData);
-
-// ==========================================
-// 5. UI COMPONENTS
-// ==========================================
 const MultiSelectDropdown = ({ title, options, selectedOptions, setSelectedOptions, icon: Icon }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -453,18 +288,16 @@ const MultiSelectDropdown = ({ title, options, selectedOptions, setSelectedOptio
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-        {title}
-      </label>
+      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">{title}</label>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between px-3 py-2 border rounded-lg text-sm transition-all bg-white ${
-          isOpen ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-gray-300 hover:border-gray-400'
+        className={`w-full flex items-center justify-between px-3 py-2 border rounded-lg text-sm transition-all bg-white shadow-sm ${
+          isOpen ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-gray-300 hover:border-indigo-300'
         }`}
       >
         <div className="flex items-center truncate">
-          {Icon && <Icon className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />}
-          <span className="truncate text-gray-700">
+          {Icon && <Icon className="h-4 w-4 text-indigo-400 mr-2 flex-shrink-0" />}
+          <span className="truncate text-gray-700 font-semibold text-xs">
             {selectedOptions.length === 0 ? `All Options` : `${selectedOptions.length} Selected`}
           </span>
         </div>
@@ -474,29 +307,22 @@ const MultiSelectDropdown = ({ title, options, selectedOptions, setSelectedOptio
       {isOpen && (
         <div className="absolute z-50 w-64 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl top-full left-0">
           <div className="p-2 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-lg">
-            <span className="text-xs font-semibold text-gray-500">{options.length} Options</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase">{options.length} Options</span>
             {selectedOptions.length > 0 && (
-              <button
-                onClick={() => setSelectedOptions([])}
-                className="text-xs text-red-600 hover:text-red-700 flex items-center"
-              >
+              <button onClick={() => setSelectedOptions([])} className="text-[10px] font-bold text-red-600 hover:text-red-700 flex items-center">
                 <FilterX className="h-3 w-3 mr-1" /> Clear
               </button>
             )}
           </div>
           <div className="max-h-60 overflow-y-auto p-1 custom-scrollbar">
             {options.map((opt) => (
-              <div
-                key={opt}
-                onClick={() => handleToggle(opt)}
-                className="flex items-center px-2 py-1.5 hover:bg-blue-50 rounded cursor-pointer group"
-              >
-                {selectedOptions.includes(opt) ? (
-                  <CheckSquare className="h-4 w-4 text-blue-600 mr-2 flex-shrink-0" />
+              <div key={opt.id || opt} onClick={() => handleToggle(opt.id || opt)} className="flex items-center px-2 py-1.5 hover:bg-indigo-50 rounded cursor-pointer group">
+                {selectedOptions.includes(opt.id || opt) ? (
+                  <CheckSquare className="h-4 w-4 text-indigo-600 mr-2 flex-shrink-0" />
                 ) : (
-                  <Square className="h-4 w-4 text-gray-300 group-hover:text-blue-300 mr-2 flex-shrink-0" />
+                  <Square className="h-4 w-4 text-gray-300 group-hover:text-indigo-300 mr-2 flex-shrink-0" />
                 )}
-                <span className="text-sm text-gray-700 truncate">{opt}</span>
+                <span className="text-xs font-medium text-gray-700 truncate">{opt.name || opt}</span>
               </div>
             ))}
           </div>
@@ -506,61 +332,40 @@ const MultiSelectDropdown = ({ title, options, selectedOptions, setSelectedOptio
   );
 };
 
-// ==========================================
-// 6. MAIN DASHBOARD COMPONENT
-// ==========================================
-export default function App() {
-  const [activeTab, setActiveTab] = useState('matrix');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTargets, setSelectedTargets] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedLevels, setSelectedLevels] = useState([]);
-  const [selectedSources, setSelectedSources] = useState([]);
-  const [selectedFunctions, setSelectedFunctions] = useState([]); 
-  const [selectedExisting, setSelectedExisting] = useState([]); 
+export default function LinerCompetencySystem() {
+  const [activeTab, setActiveTab] = useState('matrix'); // matrix, behavior, catalog
+  const [toast, setToast] = useState(null);
 
-  // Column Visibility State
-  const [hiddenCols, setHiddenCols] = useState([]);
-  const [showColMenu, setShowColMenu] = useState(false);
-  const colMenuRef = useRef(null);
-
-  const MAIN_COLS = [
-    { key: 'c', label: 'Category' },
-    { key: 't', label: 'Training Topic' },
-    { key: 'lvl', label: 'Difficulty' },
-    { key: 'func', label: 'Function' },
-    { key: 'isExt', label: 'Existing?' },
-    { key: 's', label: 'Originated By' },
-  ];
-
-  const [matrixSort, setMatrixSort] = useState({ key: 'c', dir: 'asc' });
-  const [summarySort, setSummarySort] = useState({ key: 'category', dir: 'asc' });
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 50;
-
+  // Auth State
   const [user, setUser] = useState(null);
-  const [topics, setTopics] = useState([]);
-  const [categoryDetails, setCategoryDetails] = useState({});
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
 
+  // Catalog State
+  const [topics, setTopics] = useState([]);
   const [editingTopic, setEditingTopic] = useState(null);
-  const [viewingCategory, setViewingCategory] = useState(null);
+  
+  // Matrix Filters
+  const [selectedMatrixSubUnit, setSelectedMatrixSubUnit] = useState('ALL');
+  const [hoveredCell, setHoveredCell] = useState(null);
+  const [selectedColDomain, setSelectedColDomain] = useState(null);
 
-  const [showCategoryManager, setShowCategoryManager] = useState(false);
-  const [catManagerTab, setCatManagerTab] = useState('details'); 
-  const [categoryToManage, setCategoryToManage] = useState('');
-  const [catNameInput, setCatNameInput] = useState('');
-  const [catDescInput, setCatDescInput] = useState('');
-  const [topicsToAssign, setTopicsToAssign] = useState([]); 
-  const [assignSearch, setAssignSearch] = useState('');
+  // Catalog Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedDomains, setSelectedDomains] = useState([]);
+  const [selectedLevels, setSelectedLevels] = useState([]);
+  const [selectedTargets, setSelectedTargets] = useState([]);
 
   useEffect(() => {
-    if (!auth) return;
     const initAuth = async () => {
       try {
-        await signInAnonymously(auth);
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
       } catch (err) {
         console.error('Auth Error:', err);
       }
@@ -573,73 +378,27 @@ export default function App() {
 
   useEffect(() => {
     if (!user || !db) return;
-
-    // V7 forces re-seed with NEW Detailed Descriptions and Corrected Logic
-    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'matrixData', 'mainDoc_v7');
+    
+    // Gunakan collection v2 untuk reseeding data yang baru & enterprise-wide
+    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'liner_competency_v2', 'catalog');
     const unsubscribe = onSnapshot(
       docRef,
       (snap) => {
         if (snap.exists()) {
           setTopics(snap.data().topics || []);
-          setCategoryDetails(snap.data().categoryDetails || INITIAL_CATEGORY_DESCRIPTIONS);
         } else {
-          setDoc(docRef, {
-            topics: DEFAULT_TOPICS,
-            categoryDetails: INITIAL_CATEGORY_DESCRIPTIONS,
-          }).catch(console.error);
-          setTopics(DEFAULT_TOPICS);
-          setCategoryDetails(INITIAL_CATEGORY_DESCRIPTIONS);
+          setDoc(docRef, { topics: DEDUPLICATED_CATALOG }).catch(console.error);
+          setTopics(DEDUPLICATED_CATALOG);
         }
       },
       (error) => console.error('Firestore Error:', error)
     );
-
     return () => unsubscribe();
   }, [user]);
 
-  useEffect(() => {
-    if (categoryToManage && catManagerTab === 'details') {
-      setCatNameInput(categoryToManage);
-      setCatDescInput(categoryDetails[categoryToManage] || '');
-    } else if (catManagerTab === 'add') {
-      setCatNameInput('');
-      setCatDescInput('');
-      setCategoryToManage('');
-    } else if (catManagerTab === 'assign' && categoryToManage) {
-      setTopicsToAssign(topics.filter((t) => t.c === categoryToManage).map((t) => t.id));
-    }
-  }, [categoryToManage, catManagerTab, categoryDetails, topics]);
-
-  // Click outside for column menu
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (colMenuRef.current && !colMenuRef.current.contains(e.target)) setShowColMenu(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const ALL_CATEGORIES = useMemo(() => {
-    const cats = new Set(topics.map((d) => d.c));
-    Object.keys(categoryDetails).forEach((c) => cats.add(c));
-    return [...cats].sort();
-  }, [topics, categoryDetails]);
-
-  const ALL_LEVELS = ['Basic', 'Intermediate', 'Advance'];
-  const ALL_FUNCTIONS = ['Operations', 'Development', 'Administration'];
-  const ALL_EXISTING_OPTS = ['Yes', 'No'];
-  const levelWeight = { Basic: 1, Intermediate: 2, Advance: 3 };
-
-  const ALL_SOURCES = useMemo(() => {
-    const sources = new Set();
-    topics.forEach((t) => {
-      if (t.s) t.s.split(', ').forEach((s) => sources.add(s.trim()));
-    });
-    return [...sources].sort();
-  }, [topics]);
-
-  const getDynamicCategoryDesc = (catName) => {
-    return categoryDetails[catName] || 'Custom or newly added category containing specialized operational or strategic training topics.';
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
   };
 
   const handleAdminLogin = () => {
@@ -647,355 +406,391 @@ export default function App() {
       setIsAdmin(true);
       setShowAdminLogin(false);
       setAdminPassword('');
-    } else alert('Incorrect Password');
-  };
-
-  const syncToCloud = async (newTopics, newCatDetails) => {
-    if (!db) return;
-    try {
-      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'matrixData', 'mainDoc_v7'), {
-        topics: newTopics,
-        categoryDetails: newCatDetails,
-      });
-    } catch (err) {
-      console.error('Save error', err);
+      showToast('Admin Mode Unlocked');
+    } else {
+      showToast('Incorrect Password', 'error');
     }
   };
 
-  const saveTopic = (topic) => {
+  const saveTopic = async (topic) => {
     let newTopics;
     if (topic.id) newTopics = topics.map((t) => (t.id === topic.id ? topic : t));
     else newTopics = [{ ...topic, id: crypto.randomUUID() }, ...topics];
 
-    let newDetails = { ...categoryDetails };
-    if (!newDetails[topic.c]) {
-      newDetails[topic.c] = 'New custom category added via topic creation.';
-    }
-
     setTopics(newTopics);
-    setCategoryDetails(newDetails);
     setEditingTopic(null);
-    syncToCloud(newTopics, newDetails);
+    
+    if (db) {
+      try {
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'liner_competency_v2', 'catalog'), { topics: newTopics });
+        showToast('Topic saved successfully');
+      } catch (err) {
+        showToast('Failed to save to cloud', 'error');
+      }
+    }
   };
 
-  const deleteTopic = (id) => {
-    if (!confirm('Are you sure you want to delete this topic?')) return;
+  const deleteTopic = async (id) => {
     const newTopics = topics.filter((t) => t.id !== id);
     setTopics(newTopics);
-    syncToCloud(newTopics, categoryDetails);
-  };
-
-  const handleSaveCategory = () => {
-    const newName = catNameInput.trim();
-    if (!newName) return alert('Category name cannot be empty.');
-
-    let newDetails = { ...categoryDetails };
-    let newTopics = [...topics];
-
-    if (catManagerTab === 'add') {
-      if (newDetails[newName]) return alert('Category already exists.');
-      newDetails[newName] = catDescInput.trim();
-      alert(`Category "${newName}" added successfully.`);
-      setCatNameInput('');
-      setCatDescInput('');
-    } else if (catManagerTab === 'details') {
-      const oldName = categoryToManage;
-      if (!oldName) return;
-
-      if (oldName !== newName) {
-        delete newDetails[oldName];
-        newTopics = newTopics.map((t) => (t.c === oldName ? { ...t, c: newName } : t));
+    
+    if (db) {
+      try {
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'liner_competency_v2', 'catalog'), { topics: newTopics });
+        showToast('Topic deleted');
+      } catch (err) {
+        showToast('Failed to delete', 'error');
       }
-      newDetails[newName] = catDescInput.trim();
-      setCategoryToManage(newName);
-      alert('Category details updated successfully.');
     }
-
-    setCategoryDetails(newDetails);
-    setTopics(newTopics);
-    syncToCloud(newTopics, newDetails);
   };
 
-  const handleDeleteCategory = () => {
-    if (!categoryToManage) return;
-    if (!confirm(`Delete "${categoryToManage}"? Its topics will be moved to "Uncategorized".`)) return;
+  // Matrix Logic
+  const filteredRoles = useMemo(() => {
+    if (selectedMatrixSubUnit === 'ALL') return RAW_ROLE_DATA;
+    return RAW_ROLE_DATA.filter(r => r[0] === selectedMatrixSubUnit);
+  }, [selectedMatrixSubUnit]);
 
-    let newDetails = { ...categoryDetails };
-    delete newDetails[categoryToManage];
-    if (!newDetails['Uncategorized']) newDetails['Uncategorized'] = 'Topics that have lost their category mapping.';
-
-    let newTopics = topics.map((t) => (t.c === categoryToManage ? { ...t, c: 'Uncategorized' } : t));
-
-    setCategoryDetails(newDetails);
-    setTopics(newTopics);
-    setCategoryToManage('');
-    syncToCloud(newTopics, newDetails);
-  };
-
-  const handleSaveAssignments = () => {
-    if (!categoryToManage) return;
-
-    let newDetails = { ...categoryDetails };
-    if (!newDetails['Uncategorized']) newDetails['Uncategorized'] = 'Topics that have lost their category mapping.';
-
-    let newTopics = topics.map((t) => {
-      if (topicsToAssign.includes(t.id)) {
-        return { ...t, c: categoryToManage };
-      } else if (t.c === categoryToManage) {
-        return { ...t, c: 'Uncategorized' };
-      }
-      return t;
+  // Dynamic Catalog Dropdowns
+  const DYNAMIC_CATEGORIES = useMemo(() => Array.from(new Set(topics.map(t => t.c))).sort(), [topics]);
+  const DYNAMIC_DOMAINS = useMemo(() => {
+    const rawDomains = Array.from(new Set(topics.map(t => t.d))).sort();
+    return rawDomains.map(d => {
+      const match = LINER_DOMAINS.find(ld => ld.id === d);
+      return match ? { id: match.id, name: `${match.id} - ${match.name}` } : { id: d, name: d };
     });
+  }, [topics]);
+  const DYNAMIC_TARGETS = useMemo(() => Array.from(new Set(topics.flatMap(t => t.tg))).sort(), [topics]);
 
-    setTopics(newTopics);
-    setCategoryDetails(newDetails);
-    alert('Topic assignments updated.');
-    syncToCloud(newTopics, newDetails);
-  };
-
-  const toggleHiddenCol = (colKey) => {
-    setHiddenCols(prev => prev.includes(colKey) ? prev.filter(c => c !== colKey) : [...prev, colKey]);
-  };
-
-  // ----------------------------------------
-  // Filtering & Sorting Logic
-  // ----------------------------------------
-  const filteredData = useMemo(() => {
-    setCurrentPage(1);
+  // Catalog Filter Logic
+  const filteredCatalog = useMemo(() => {
     return topics.filter((item) => {
-      const matchSearch =
-        item.t.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.s.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.c.toLowerCase().includes(searchTerm.toLowerCase());
-
+      const matchSearch = item.t.toLowerCase().includes(searchTerm.toLowerCase()) || (item.desc && item.desc.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchCategory = selectedCategories.length === 0 || selectedCategories.includes(item.c);
+      const matchDomain = selectedDomains.length === 0 || selectedDomains.includes(item.d);
       const matchLevel = selectedLevels.length === 0 || selectedLevels.includes(item.lvl);
       const matchTarget = selectedTargets.length === 0 || item.tg.some((t) => selectedTargets.includes(t));
-      const matchSource = selectedSources.length === 0 || item.s.split(', ').some((s) => selectedSources.includes(s.trim()));
-      const matchFunction = selectedFunctions.length === 0 || selectedFunctions.includes(item.func);
-      const matchExisting = selectedExisting.length === 0 || selectedExisting.includes(item.isExt);
-
-      return matchSearch && matchCategory && matchLevel && matchTarget && matchSource && matchFunction && matchExisting;
-    });
-  }, [topics, searchTerm, selectedCategories, selectedLevels, selectedTargets, selectedSources, selectedFunctions, selectedExisting]);
-
-  const sortedFilteredData = useMemo(() => {
-    let sortableItems = [...filteredData];
-    sortableItems.sort((a, b) => {
-      if (matrixSort.key === 'c') {
-        const catCompare = a.c.localeCompare(b.c);
-        if (catCompare !== 0) return matrixSort.dir === 'asc' ? catCompare : -catCompare;
-        return (levelWeight[a.lvl] || 2) - (levelWeight[b.lvl] || 2);
-      }
-      if (matrixSort.key === 'lvl') {
-        return matrixSort.dir === 'asc'
-          ? (levelWeight[a.lvl] || 2) - (levelWeight[b.lvl] || 2)
-          : (levelWeight[b.lvl] || 2) - (levelWeight[a.lvl] || 2);
-      }
-
-      let aVal = a[matrixSort.key] || '';
-      let bVal = b[matrixSort.key] || '';
       
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return matrixSort.dir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      }
-
-      if (aVal < bVal) return matrixSort.dir === 'asc' ? -1 : 1;
-      if (aVal > bVal) return matrixSort.dir === 'asc' ? 1 : -1;
-      return 0;
+      return matchSearch && matchCategory && matchDomain && matchLevel && matchTarget;
     });
-    return sortableItems;
-  }, [filteredData, matrixSort]);
+  }, [topics, searchTerm, selectedCategories, selectedDomains, selectedLevels, selectedTargets]);
 
-  const handlePageChange = (newPage) => setCurrentPage(newPage);
+  const renderHeatmap = () => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative z-0 flex flex-col h-[calc(100vh-220px)] min-h-[600px]">
+      <div className="bg-slate-50 border-b border-gray-200 px-5 py-3 flex flex-wrap items-center justify-between gap-4 flex-shrink-0">
+        <div className="flex items-center space-x-2">
+          <Network className="w-5 h-5 text-indigo-600" />
+          <h2 className="text-lg font-bold text-gray-800">Role Competency Matrix</h2>
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          <select 
+            value={selectedMatrixSubUnit} 
+            onChange={(e) => setSelectedMatrixSubUnit(e.target.value)}
+            className="text-sm border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 py-1.5 pl-3 pr-8 bg-white font-medium text-gray-700"
+          >
+            <option value="ALL">All Liner Sub-units</option>
+            {LINER_SUBUNITS.map(su => <option key={su} value={su}>{su}</option>)}
+          </select>
+          
+          <div className="flex space-x-1.5 bg-white p-1 rounded-md border border-gray-200 shadow-sm">
+            {ALL_LEVELS.map(lvl => (
+              <div key={lvl} className={`px-2 py-0.5 rounded text-[10px] font-bold border ${LEVEL_COLORS[lvl]} flex items-center`}>
+                {lvl}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-  const totalPages = Math.ceil(sortedFilteredData.length / itemsPerPage) || 1;
-  const currentData = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return sortedFilteredData.slice(startIndex, startIndex + itemsPerPage);
-  }, [currentPage, sortedFilteredData]);
+      <div className="overflow-auto custom-scrollbar flex-1 relative">
+        <table className="w-full border-collapse min-w-max text-left">
+          <thead className="bg-white sticky top-0 z-40 shadow-sm">
+            <tr>
+              <th colSpan="3" className="sticky left-0 bg-white z-50 border-b-2 border-r-2 border-gray-300 p-2 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                <div className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Position Information</div>
+              </th>
+              {LINER_CATEGORIES.map(cat => {
+                const domainCount = LINER_DOMAINS.filter(d => d.cat === cat.name).length;
+                return (
+                  <th key={cat.id} colSpan={domainCount} className="p-2 border-b-2 border-r border-gray-300 text-center bg-slate-100">
+                    <div className="text-xs font-black text-slate-700 tracking-wide">{cat.name}</div>
+                  </th>
+                );
+              })}
+            </tr>
+            <tr>
+              <th className="sticky left-0 bg-white z-50 border-b-2 border-r border-gray-200 p-2 text-xs font-bold text-gray-600 w-28">Sub-Unit</th>
+              <th className="sticky left-[112px] bg-white z-50 border-b-2 border-r border-gray-200 p-2 text-xs font-bold text-gray-600 w-16 text-center">Tier</th>
+              <th className="sticky left-[176px] bg-white z-50 border-b-2 border-r-2 border-gray-300 p-2 text-xs font-bold text-gray-800 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] w-64">Position Title</th>
+              
+              {LINER_DOMAINS.map(domain => (
+                <th 
+                  key={domain.id} 
+                  className={`p-2 border-b-2 border-r border-gray-200 cursor-pointer hover:bg-indigo-50 transition-colors ${selectedColDomain === domain.id ? 'bg-indigo-100' : 'bg-white'}`}
+                  title={domain.name}
+                  onClick={() => setSelectedColDomain(selectedColDomain === domain.id ? null : domain.id)}
+                >
+                  <div className="flex flex-col items-center justify-end h-32 w-10">
+                    <span className="text-[10px] font-bold text-indigo-900 mb-2">{domain.id}</span>
+                    <span className="text-[10px] font-semibold text-gray-600 writing-vertical transform rotate-180 text-left whitespace-nowrap overflow-hidden max-h-24">
+                      {domain.name}
+                    </span>
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          
+          <tbody className="divide-y divide-gray-100 bg-white">
+            {filteredRoles.map((roleRow, idx) => {
+              const [su, tier, title, ...domainVals] = roleRow;
+              return (
+                <tr key={idx} className="hover:bg-slate-50 transition-colors group">
+                  <td className="sticky left-0 bg-white group-hover:bg-slate-50 z-20 p-2 border-r border-gray-200 text-xs font-semibold text-gray-600 truncate">{su}</td>
+                  <td className="sticky left-[112px] bg-white group-hover:bg-slate-50 z-20 p-2 border-r border-gray-200 text-[10px] text-center font-bold text-slate-500 bg-slate-50/50">{tier}</td>
+                  <td className="sticky left-[176px] bg-white group-hover:bg-slate-50 z-20 p-2 border-r-2 border-gray-300 text-xs font-bold text-gray-900 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] truncate">{title}</td>
+                  
+                  {LINER_DOMAINS.map((d, dIdx) => {
+                    const level = domainVals[dIdx] || '';
+                    const colorClass = LEVEL_COLORS[level] || LEVEL_COLORS[''];
+                    const isHovered = hoveredCell === `${idx}-${d.id}`;
+                    const isColSelected = selectedColDomain === d.id;
+                    
+                    return (
+                      <td 
+                        key={d.id} 
+                        className={`p-1.5 border-r border-gray-100 text-center relative ${isColSelected ? 'bg-indigo-50/50' : ''}`}
+                        onMouseEnter={() => setHoveredCell(`${idx}-${d.id}`)}
+                        onMouseLeave={() => setHoveredCell(null)}
+                      >
+                        {level && (
+                          <div className={`w-full h-7 rounded border flex items-center justify-center text-[10px] font-black cursor-help transition-transform ${colorClass} ${isHovered ? 'scale-110 shadow-md ring-1 ring-black/10 z-10' : ''}`}>
+                            {level}
+                          </div>
+                        )}
+                        
+                        {isHovered && level && (
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 w-64 bg-slate-800 text-white text-xs rounded-lg shadow-xl p-3 pointer-events-none">
+                            <div className="font-bold text-indigo-300 mb-1">{title}</div>
+                            <div className="font-semibold text-gray-300 border-b border-slate-600 pb-1 mb-1">{d.name} ({level})</div>
+                            <div className="text-[10px] leading-relaxed text-gray-200">
+                              {BEHAVIORAL_INDICATORS[d.id]?.[level] || 'No indicator data.'}
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="bg-slate-100 p-3 text-xs text-gray-500 border-t border-gray-200 flex justify-between items-center flex-shrink-0 font-medium">
+        <span>Showing {filteredRoles.length} positions. Hover over matrix cells for behavioral indicators. Click a column header to highlight.</span>
+      </div>
+    </div>
+  );
 
-  const handleMatrixSort = (key) => {
-    setMatrixSort({ key, dir: matrixSort.key === key && matrixSort.dir === 'asc' ? 'desc' : 'asc' });
-  };
+  const renderBehavior = () => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center space-x-3 mb-6 border-b border-gray-100 pb-4">
+        <Award className="w-8 h-8 text-indigo-600" />
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Competency Level Descriptors</h2>
+          <p className="text-sm text-gray-500">Universal behavioral indicators for the 19 Domains across all Liner Sub-units.</p>
+        </div>
+      </div>
+      
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {LINER_DOMAINS.map(domain => (
+          <div key={domain.id} className="bg-slate-50 rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm hover:shadow-md transition">
+            <div className="bg-indigo-50/50 px-4 py-3 border-b border-gray-200">
+              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">{domain.id} · {domain.cat}</span>
+              <h3 className="text-sm font-bold text-gray-900 leading-tight mt-1">{domain.name}</h3>
+            </div>
+            <div className="p-4 flex-1 space-y-4">
+              {ALL_LEVELS.map(lvl => (
+                <div key={lvl} className="flex items-start">
+                  <div className={`px-1.5 py-0.5 rounded text-[9px] font-bold border mr-3 flex-shrink-0 ${LEVEL_COLORS[lvl]}`}>
+                    {lvl}
+                  </div>
+                  <p className="text-[11px] text-gray-700 leading-relaxed font-medium">
+                    {BEHAVIORAL_INDICATORS[domain.id]?.[lvl] || 'Pending descriptor.'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
-  const getSortIcon = (currentSort, columnKey) => {
-    if (currentSort.key !== columnKey) return null;
-    return currentSort.dir === 'asc' ? <ChevronUp className="inline w-3 h-3 ml-1" /> : <ChevronDown className="inline w-3 h-3 ml-1" />;
-  };
+  const renderCatalog = () => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 relative z-30">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center justify-between mb-4 border-b border-gray-100 pb-4 gap-3">
+        <div className="flex items-center space-x-2">
+          <BookOpen className="h-5 w-5 text-indigo-600" />
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">Enterprise Training Catalog</h2>
+            <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Including Liner Specific & Non-Liner General Enterprise Domains</p>
+          </div>
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-3">
+          {(selectedTargets.length > 0 || selectedCategories.length > 0 || selectedDomains.length > 0 || selectedLevels.length > 0 || searchTerm) && (
+            <button
+              onClick={() => {
+                setSearchTerm(''); setSelectedTargets([]); setSelectedCategories([]); setSelectedDomains([]); setSelectedLevels([]);
+              }}
+              className="text-xs text-red-600 hover:text-red-700 font-bold flex items-center bg-red-50 hover:bg-red-100 py-1.5 px-3 rounded-lg transition"
+            >
+              <FilterX className="w-3.5 h-3.5 mr-1" /> Reset Filters
+            </button>
+          )}
+          {isAdmin && (
+            <button
+              onClick={() => setEditingTopic({ t: '', c: LINER_CATEGORIES[0].name, d: 'Unmapped', desc: '', lvl: 'Intermediate', tg: [], isExt: 'No' })}
+              className="flex items-center text-xs font-bold text-white bg-indigo-600 py-1.5 px-3 rounded-lg hover:bg-indigo-700 transition shadow-sm"
+            >
+              <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Topic
+            </button>
+          )}
+        </div>
+      </div>
 
-  // ----------------------------------------
-  // Summary Logic
-  // ----------------------------------------
-  const handleSummarySort = (key) => {
-    setSummarySort({ key, dir: summarySort.key === key && summarySort.dir === 'asc' ? 'desc' : 'asc' });
-  };
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div className="relative">
+          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Search</label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search topics..."
+              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm font-medium"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+        <MultiSelectDropdown title="Category" options={DYNAMIC_CATEGORIES} selectedOptions={selectedCategories} setSelectedOptions={setSelectedCategories} icon={LayoutDashboard} />
+        <MultiSelectDropdown title="Mapped Domain" options={DYNAMIC_DOMAINS} selectedOptions={selectedDomains} setSelectedOptions={setSelectedDomains} icon={Target} />
+        <MultiSelectDropdown title="Applicable To (SBU)" options={DYNAMIC_TARGETS} selectedOptions={selectedTargets} setSelectedOptions={setSelectedTargets} icon={Users} />
+        <MultiSelectDropdown title="Difficulty" options={CATALOG_LEVELS} selectedOptions={selectedLevels} setSelectedOptions={setSelectedLevels} icon={GraduationCap} />
+      </div>
 
-  const summaryData = useMemo(() => {
-    const counts = {};
-    ALL_CATEGORIES.forEach((c) => {
-      counts[c] = { category: c, total: 0, depts: {} };
-      ALL_UNITS.forEach((u) => (counts[c].depts[u] = 0));
-    });
-
-    topics.forEach((row) => {
-      if (!counts[row.c]) return;
-      counts[row.c].total += 1;
-      row.tg.forEach((dept) => {
-        if (counts[row.c].depts[dept] !== undefined) counts[row.c].depts[dept] += 1;
-      });
-    });
-
-    let summaryRows = Object.values(counts);
-    summaryRows.sort((a, b) => {
-      const key = summarySort.key;
-      let aVal, bVal;
-      if (key === 'category') {
-        aVal = a.category;
-        bVal = b.category;
-      } else if (key === 'total') {
-        aVal = a.total;
-        bVal = b.total;
-      } else {
-        aVal = a.depts[key];
-        bVal = b.depts[key];
-      }
-
-      if (typeof aVal === 'string') return summarySort.dir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      return summarySort.dir === 'asc' ? aVal - bVal : bVal - aVal;
-    });
-    return summaryRows;
-  }, [topics, summarySort, ALL_CATEGORIES]);
-
-  let enterpriseTotal = topics.length;
-  let deptGrandTotals = {};
-  ALL_UNITS.forEach((u) => (deptGrandTotals[u] = 0));
-  topics.forEach((row) => {
-    row.tg.forEach((dept) => {
-      if (deptGrandTotals[dept] !== undefined) deptGrandTotals[dept]++;
-    });
-  });
-
-  const visibleColCount = (isAdmin ? 1 : 0) + MAIN_COLS.filter(c => !hiddenCols.includes(c.key)).length + DEPT_INFO.filter(d => !hiddenCols.includes(d.abbr)).length;
-
-  // ----------------------------------------
-  // EXCEL EXPORT LOGIC
-  // ----------------------------------------
-  const handleExportExcel = () => {
-    let tableHtml = `
-      <html xmlns:x="urn:schemas-microsoft-com:office:excel">
-        <head>
-          <meta charset="utf-8">
-          <style>
-            table { border-collapse: collapse; font-family: Arial, sans-serif; }
-            th { background-color: #1e3a8a; color: white; padding: 12px; border: 1px solid #cbd5e1; text-align: left; font-size: 14px; }
-            td { padding: 10px; border: 1px solid #cbd5e1; vertical-align: top; font-size: 13px; }
-            .y-cell { background-color: #dcfce7; color: #166534; text-align: center; font-weight: bold; }
-          </style>
-        </head>
-        <body>
-          <table>
-            <thead>
+      <div className="overflow-x-auto border border-gray-200 rounded-lg max-h-[600px] custom-scrollbar">
+        <table className="w-full text-left text-sm whitespace-nowrap">
+          <thead className="bg-slate-100 sticky top-0 z-10 shadow-sm">
+            <tr>
+              {isAdmin && <th className="px-4 py-3 font-bold text-gray-600 w-16">Action</th>}
+              <th className="px-4 py-3 font-bold text-gray-600 w-32">Mapped Domain</th>
+              <th className="px-4 py-3 font-bold text-gray-600 max-w-[150px]">Category</th>
+              <th className="px-4 py-3 font-bold text-gray-600 w-1/3">Training Topic</th>
+              <th className="px-4 py-3 font-bold text-gray-600 text-center">Level</th>
+              <th className="px-4 py-3 font-bold text-gray-600">Target SBU / Entity</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 bg-white">
+            {filteredCatalog.length > 0 ? filteredCatalog.map(row => {
+              const isLinerDomain = row.d.startsWith('D') && row.d.length <= 3;
+              return (
+                <tr key={row.id} className="hover:bg-indigo-50 transition">
+                  {isAdmin && (
+                    <td className="px-4 py-3">
+                      <div className="flex space-x-2">
+                        <button onClick={() => setEditingTopic(row)} className="text-gray-400 hover:text-indigo-600"><Edit className="w-4 h-4" /></button>
+                        <button onClick={() => { if(confirm('Delete topic?')) deleteTopic(row.id); }} className="text-gray-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    </td>
+                  )}
+                  <td className="px-4 py-3">
+                    {isLinerDomain ? (
+                      <span className="px-2 py-1 rounded text-[10px] font-black border bg-indigo-100 text-indigo-800 border-indigo-200 uppercase tracking-wider">{row.d}</span>
+                    ) : (
+                      <span className="px-2 py-1 rounded text-[10px] font-bold border bg-gray-100 text-gray-600 border-gray-200 truncate block max-w-[150px]" title={row.d}>{row.d}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-[11px] font-semibold text-gray-600 truncate max-w-[180px]" title={row.c}>{row.c}</td>
+                  <td className="px-4 py-3">
+                    <div className="font-bold text-gray-800 whitespace-normal">{row.t}</div>
+                    <div className="text-[10px] text-gray-500 line-clamp-2 mt-0.5 whitespace-normal">{row.desc}</div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className={`px-2 py-1 rounded text-[10px] font-bold border ${row.lvl === 'Advance' ? 'bg-amber-50 text-amber-700 border-amber-200' : row.lvl === 'Intermediate' ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                      {row.lvl}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1 max-w-[250px]">
+                      {row.tg.map((su, idx) => (
+                        <span key={idx} className="bg-slate-100 border border-slate-200 text-slate-600 text-[9px] font-bold px-1.5 py-0.5 rounded">{su}</span>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              );
+            }) : (
               <tr>
-                <th>Category</th>
-                <th>Training Topic</th>
-                <th>Description / Objective</th>
-                <th>Difficulty</th>
-                <th>Function</th>
-                <th>Existing Module?</th>
-                <th>Originated By</th>`;
-
-    DEPT_INFO.forEach(dept => {
-      tableHtml += `<th>${dept.abbr} (${dept.type})</th>`;
-    });
-
-    tableHtml += `</tr></thead><tbody>`;
-
-    sortedFilteredData.forEach(row => {
-      const escapeHtml = (unsafe) => {
-        if (!unsafe) return '';
-        return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-      };
-
-      tableHtml += `<tr>
-        <td>${escapeHtml(row.c)}</td>
-        <td><b>${escapeHtml(row.t)}</b></td>
-        <td>${escapeHtml(row.desc)}</td>
-        <td>${escapeHtml(row.lvl)}</td>
-        <td>${escapeHtml(row.func)}</td>
-        <td>${escapeHtml(row.isExt)}</td>
-        <td>${escapeHtml(row.s)}</td>`;
-
-      DEPT_INFO.forEach(dept => {
-        const isApp = row.tg.includes(dept.full);
-        tableHtml += `<td class="${isApp ? 'y-cell' : ''}">${isApp ? 'Y' : ''}</td>`;
-      });
-
-      tableHtml += `</tr>`;
-    });
-
-    tableHtml += `</tbody></table></body></html>`;
-
-    const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'Meratus_Skill_Matrix_Export.xls';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
+                <td colSpan={6} className="text-center py-10 text-gray-500 font-medium">No topics found matching your criteria.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-3 text-xs text-gray-500 font-medium">Showing {filteredCatalog.length} of {topics.length} global topics.</div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-sans pb-12">
+    <div className="min-h-screen bg-[#f8fafc] font-sans text-gray-800 pb-12">
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-[200] animate-fade-in-down">
+          <div className={`flex items-center px-4 py-3 rounded-lg shadow-lg border ${toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-emerald-50 border-emerald-200 text-emerald-800'}`}>
+            {toast.type === 'error' ? <X className="w-5 h-5 mr-2" /> : <CheckCircle className="w-5 h-5 mr-2" />}
+            <span className="font-bold text-sm">{toast.msg}</span>
+          </div>
+        </div>
+      )}
+
       {/* HEADER */}
-      <header className="bg-blue-900 text-white shadow-md sticky top-0 z-[60]">
+      <header className="bg-[#0f172a] text-white shadow-md sticky top-0 z-[60]">
         <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-4 flex flex-col sm:flex-row justify-between items-center">
-            <div className="flex items-center space-x-3 mb-4 sm:mb-0">
-              <div className="bg-white p-2 rounded-lg shadow-sm">
-                <LayoutDashboard className="h-6 w-6 text-blue-900" />
+          <div className="py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div className="flex items-center space-x-4">
+              <div className="bg-indigo-600 p-2.5 rounded-xl shadow-inner border border-indigo-500/50">
+                <ShieldCheck className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">Meratus Skill Matrix Categorization</h1>
-                <p className="text-blue-200 text-sm">Comprehensive L&D Dashboard - Cloud Synced</p>
+                <h1 className="text-xl md:text-2xl font-black tracking-tight text-white leading-none">Liner Competency System</h1>
+                <p className="text-indigo-200 text-[10px] md:text-xs font-bold mt-1 tracking-wider uppercase">Integrated Scope Map · Role Based</p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="flex p-1 bg-blue-950 rounded-lg shadow-inner">
-                <button
-                  onClick={() => setActiveTab('matrix')}
-                  className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    activeTab === 'matrix' ? 'bg-white text-blue-900 shadow' : 'text-blue-100 hover:text-white hover:bg-blue-800'
-                  }`}
-                >
-                  <TableProperties className="w-4 h-4 mr-2" /> Matrix
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <div className="flex bg-[#1e293b] p-1 rounded-lg border border-slate-700">
+                <button onClick={() => setActiveTab('matrix')} className={`flex items-center px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'matrix' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}>
+                  <Network className="w-4 h-4 mr-2" /> Matrix
                 </button>
-                <button
-                  onClick={() => setActiveTab('summary')}
-                  className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    activeTab === 'summary' ? 'bg-white text-blue-900 shadow' : 'text-blue-100 hover:text-white hover:bg-blue-800'
-                  }`}
-                >
-                  <BarChart2 className="w-4 h-4 mr-2" /> Summary
+                <button onClick={() => setActiveTab('behavior')} className={`flex items-center px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'behavior' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}>
+                  <Award className="w-4 h-4 mr-2" /> Behaviors
+                </button>
+                <button onClick={() => setActiveTab('catalog')} className={`flex items-center px-4 py-2 rounded-md text-sm font-bold transition-all ${activeTab === 'catalog' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}>
+                  <BookOpen className="w-4 h-4 mr-2" /> Catalog
                 </button>
               </div>
 
               {isAdmin ? (
-                <button
-                  onClick={() => setIsAdmin(false)}
-                  className="flex items-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all"
-                >
-                  <Unlock className="w-4 h-4 mr-2" /> Admin Active
+                <button onClick={() => {setIsAdmin(false); showToast('Admin Mode Locked');}} className="flex items-center px-3 py-2 bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 text-red-400 text-xs font-bold rounded-lg transition">
+                  <Unlock className="w-4 h-4 mr-1.5" /> Admin On
                 </button>
               ) : (
-                <button
-                  onClick={() => setShowAdminLogin(true)}
-                  className="flex items-center px-3 py-2 bg-blue-800 hover:bg-blue-700 text-blue-100 text-sm font-medium rounded-lg shadow-sm transition-all border border-blue-700"
-                >
-                  <Lock className="w-4 h-4 mr-2" /> Edit Mode
+                <button onClick={() => setShowAdminLogin(true)} className="flex items-center px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 text-xs font-bold rounded-lg transition">
+                  <Lock className="w-4 h-4 mr-1.5" /> Edit Mode
                 </button>
               )}
             </div>
@@ -1004,969 +799,132 @@ export default function App() {
       </header>
 
       <main className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* DASHBOARD METRICS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8 relative z-0">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center space-x-4 transition hover:shadow-md">
-            <div className="bg-blue-100 p-3 rounded-full">
-              <BookOpen className="h-6 w-6 text-blue-600" />
-            </div>
+        {/* KPI CARDS */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center space-x-4">
+            <div className="bg-blue-50 p-3 rounded-xl text-blue-600"><Users className="w-6 h-6"/></div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Total Topics</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {filteredData.length} <span className="text-xs font-normal text-gray-400">/ {topics.length}</span>
-              </p>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Mapped Roles</p>
+              <p className="text-2xl font-black text-gray-900">67</p>
             </div>
           </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center space-x-4 transition hover:shadow-md">
-            <div className="bg-teal-100 p-3 rounded-full">
-              <CheckCircle className="h-6 w-6 text-teal-600" />
-            </div>
+          <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center space-x-4">
+            <div className="bg-indigo-50 p-3 rounded-xl text-indigo-600"><Target className="w-6 h-6"/></div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Module Coverage</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {filteredData.filter(t => t.isExt === 'Yes').length} <span className="text-xs font-normal text-gray-400">/ {filteredData.length}</span>
-              </p>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Liner Domains</p>
+              <p className="text-2xl font-black text-gray-900">19</p>
             </div>
           </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center space-x-4 transition hover:shadow-md">
-            <div className="bg-green-100 p-3 rounded-full">
-              <ShieldCheck className="h-6 w-6 text-green-600" />
-            </div>
+          <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center space-x-4">
+            <div className="bg-emerald-50 p-3 rounded-xl text-emerald-600"><BookOpen className="w-6 h-6"/></div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Categories</p>
-              <p className="text-2xl font-bold text-gray-900">{ALL_CATEGORIES.length}</p>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Enterprise Modules</p>
+              <p className="text-2xl font-black text-gray-900">{topics.length}</p>
             </div>
           </div>
-
-          {isAdmin ? (
-            <div className="grid grid-cols-2 gap-2">
-              <div
-                onClick={() =>
-                  setEditingTopic({
-                    t: '', c: ALL_CATEGORIES[0] || 'New Category', desc: '', lvl: 'Intermediate', s: 'Admin', tg: [], func: 'Operations', isExt: 'No'
-                  })
-                }
-                className="bg-blue-600 hover:bg-blue-700 cursor-pointer rounded-xl shadow-sm p-3 flex flex-col items-center justify-center transition hover:shadow-md group"
-              >
-                <Plus className="h-6 w-6 text-white mb-1 group-hover:scale-110 transition-transform" />
-                <p className="text-xs font-bold text-white text-center">Add Topic</p>
-              </div>
-              <div
-                onClick={() => setShowCategoryManager(true)}
-                className="bg-purple-600 hover:bg-purple-700 cursor-pointer rounded-xl shadow-sm p-3 flex flex-col items-center justify-center transition hover:shadow-md group"
-              >
-                <FolderEdit className="h-6 w-6 text-white mb-1 group-hover:scale-110 transition-transform" />
-                <p className="text-xs font-bold text-white text-center">Categories</p>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center space-x-4 transition hover:shadow-md">
-              <div className="bg-purple-100 p-3 rounded-full">
-                <GraduationCap className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Difficulty Tracks</p>
-                <p className="text-2xl font-bold text-gray-900">{ALL_LEVELS.length}</p>
-              </div>
-            </div>
-          )}
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center space-x-4 transition hover:shadow-md">
-            <div className="bg-orange-100 p-3 rounded-full">
-              <Users className="h-6 w-6 text-orange-600" />
-            </div>
+          <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center space-x-4">
+            <div className="bg-purple-50 p-3 rounded-xl text-purple-600"><LayoutDashboard className="w-6 h-6"/></div>
             <div>
-              <p className="text-sm font-medium text-gray-500">Target Depts</p>
-              <p className="text-2xl font-bold text-gray-900">25</p>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Training Categories</p>
+              <p className="text-2xl font-black text-gray-900">{DYNAMIC_CATEGORIES.length}</p>
             </div>
           </div>
         </div>
 
-        {/* ========================================================= */}
-        {/* VIEW 1: MATRIX VIEW */}
-        {/* ========================================================= */}
-        {activeTab === 'matrix' && (
-          <>
-            {/* CONTROLS / FILTERS */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6 relative z-30">
-              {/* HEADER ACTION BAR - FIXED LAYOUT */}
-              <div className="flex flex-wrap items-center justify-between mb-4 border-b border-gray-100 pb-3 gap-3">
-                <div className="flex items-center space-x-2">
-                  <Filter className="h-5 w-5 text-gray-500" />
-                  <h2 className="text-lg font-semibold text-gray-700">Refine Matrix</h2>
-                </div>
-                
-                {/* BUTTONS (RESET, EXCEL, & COLUMN MANAGER) */}
-                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                  {(selectedTargets.length > 0 || selectedCategories.length > 0 || selectedLevels.length > 0 || selectedSources.length > 0 || selectedFunctions.length > 0 || selectedExisting.length > 0 || searchTerm) && (
-                    <button
-                      onClick={() => {
-                        setSearchTerm('');
-                        setSelectedTargets([]);
-                        setSelectedCategories([]);
-                        setSelectedLevels([]);
-                        setSelectedSources([]);
-                        setSelectedFunctions([]);
-                        setSelectedExisting([]);
-                      }}
-                      className="text-xs text-red-600 hover:text-red-700 font-bold flex items-center bg-red-50 hover:bg-red-100 py-1.5 px-3 rounded-md transition whitespace-nowrap"
-                    >
-                      <FilterX className="w-3.5 h-3.5 mr-1" /> Reset
-                    </button>
-                  )}
-
-                  <button
-                    onClick={handleExportExcel}
-                    className="flex items-center text-xs font-bold text-emerald-700 bg-emerald-50 py-1.5 px-3 rounded-md border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition shadow-sm whitespace-nowrap"
-                  >
-                    <Download className="h-3.5 w-3.5 mr-1.5 text-emerald-600" /> Export Excel
-                  </button>
-                  
-                  {/* COLUMN MANAGER UI */}
-                  <div className="relative" ref={colMenuRef}>
-                    <button
-                      onClick={() => setShowColMenu(!showColMenu)}
-                      className="flex items-center text-xs font-bold text-gray-700 bg-white py-1.5 px-3 rounded-md border border-gray-300 hover:bg-gray-50 transition shadow-sm whitespace-nowrap"
-                    >
-                      <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5 text-gray-500" /> Columns
-                    </button>
-                    {showColMenu && (
-                      <div className="absolute right-0 top-full mt-2 w-[420px] bg-white border border-gray-200 rounded-xl shadow-2xl z-[100] p-5 max-h-[85vh] flex flex-col">
-                        <div className="flex justify-between items-center border-b border-gray-100 pb-3 mb-4 flex-shrink-0">
-                          <span className="font-bold text-sm text-gray-800 flex items-center">
-                            <SlidersHorizontal className="w-4 h-4 mr-2 text-gray-500" />
-                            Customize Columns
-                          </span>
-                          <div className="space-x-2">
-                             <button onClick={() => setHiddenCols([...MAIN_COLS.map(c=>c.key), ...DEPT_INFO.map(d=>d.abbr)])} className="text-[10px] text-red-600 hover:bg-red-50 hover:text-red-700 font-bold px-2.5 py-1.5 rounded-md transition-colors">
-                                Hide All
-                             </button>
-                             <button onClick={() => setHiddenCols([])} className="text-[10px] text-blue-600 hover:text-blue-800 font-bold bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-md transition-colors">
-                                Show All
-                             </button>
-                          </div>
-                        </div>
-                        
-                        <div className="overflow-y-auto custom-scrollbar pr-2">
-                            <div className="font-bold text-[10px] mb-3 text-gray-400 uppercase tracking-wider">Main Information</div>
-                            {/* FIXED: Changed from Grid-cols-2 to flex-col single list to prevent overlapping text */}
-                            <div className="flex flex-col gap-2 mb-5">
-                              {MAIN_COLS.map(col => (
-                                <label key={col.key} className="flex items-center space-x-3 text-sm text-gray-700 cursor-pointer hover:bg-gray-50 p-2 rounded-lg border border-transparent hover:border-gray-100 transition-colors w-full">
-                                  <input type="checkbox" checked={!hiddenCols.includes(col.key)} onChange={() => toggleHiddenCol(col.key)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4 flex-shrink-0" />
-                                  <span className="font-medium whitespace-normal leading-tight">{col.label}</span>
-                                </label>
-                              ))}
-                            </div>
-
-                            <div className="font-bold text-[10px] mb-3 text-gray-400 uppercase tracking-wider border-t border-gray-100 pt-4">Departments (SBU/SFU)</div>
-                            <div className="grid grid-cols-4 gap-2">
-                              {DEPT_INFO.map(dept => (
-                                <label key={dept.abbr} className="flex items-center space-x-2 text-xs text-gray-600 cursor-pointer hover:bg-gray-50 p-1.5 rounded-lg border border-transparent hover:border-gray-100 transition-colors">
-                                  <input type="checkbox" checked={!hiddenCols.includes(dept.abbr)} onChange={() => toggleHiddenCol(dept.abbr)} className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 w-3.5 h-3.5 flex-shrink-0" />
-                                  <span className="truncate font-medium" title={dept.full}>{dept.abbr}</span>
-                                </label>
-                              ))}
-                            </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-                <div className="relative xl:col-span-1 lg:col-span-2 sm:col-span-2">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                    Search Keywords
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search topics..."
-                      className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-all"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <MultiSelectDropdown title="Job Function" options={ALL_FUNCTIONS} selectedOptions={selectedFunctions} setSelectedOptions={setSelectedFunctions} icon={Briefcase} />
-                <MultiSelectDropdown title="Existing Module" options={ALL_EXISTING_OPTS} selectedOptions={selectedExisting} setSelectedOptions={setSelectedExisting} icon={HelpCircle} />
-                <MultiSelectDropdown title="Applicable To" options={ALL_UNITS} selectedOptions={selectedTargets} setSelectedOptions={setSelectedTargets} icon={Target} />
-                <MultiSelectDropdown title="Skill Category" options={ALL_CATEGORIES} selectedOptions={selectedCategories} setSelectedOptions={setSelectedCategories} icon={LayoutDashboard} />
-                <MultiSelectDropdown title="Difficulty" options={ALL_LEVELS} selectedOptions={selectedLevels} setSelectedOptions={setSelectedLevels} icon={GraduationCap} />
-                <MultiSelectDropdown title="Originated By" options={ALL_SOURCES} selectedOptions={selectedSources} setSelectedOptions={setSelectedSources} icon={BookOpen} />
-              </div>
-            </div>
-
-            {/* DATA TABLE */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative z-0">
-              <div className="overflow-x-auto custom-scrollbar max-h-[800px] overflow-y-auto relative">
-                <table className="min-w-max w-full divide-y divide-gray-200">
-                  <thead className="bg-slate-100">
-                    <tr>
-                      {isAdmin && (
-                        <th className="sticky top-0 left-0 bg-slate-100 z-[45] px-3 w-16 border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb]"></th>
-                      )}
-                      
-                      {!hiddenCols.includes('c') && (
-                        <th
-                          onClick={() => handleMatrixSort('c')}
-                          className={`sticky top-0 ${isAdmin ? 'left-[64px]' : 'left-0'} bg-slate-100 z-40 px-5 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb] cursor-pointer hover:bg-slate-200 transition-colors`}
-                          style={{ width: '280px', minWidth: '280px' }}
-                        >
-                          Category {getSortIcon(matrixSort, 'c')}
-                        </th>
-                      )}
-
-                      {!hiddenCols.includes('t') && (
-                        <th
-                          onClick={() => handleMatrixSort('t')}
-                          className={`sticky top-0 bg-slate-100 z-40 px-5 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 ${!hiddenCols.includes('c') ? 'shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]' : ''} cursor-pointer hover:bg-slate-200 transition-colors`}
-                          style={{ left: !hiddenCols.includes('c') ? (isAdmin ? '344px' : '280px') : (isAdmin ? '64px' : '0px'), width: '380px', minWidth: '380px' }}
-                        >
-                          Training Topic {getSortIcon(matrixSort, 't')}
-                        </th>
-                      )}
-
-                      {!hiddenCols.includes('lvl') && (
-                        <th onClick={() => handleMatrixSort('lvl')} className="sticky top-0 bg-slate-100 z-30 px-5 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 w-32 cursor-pointer hover:bg-slate-200 transition-colors">
-                          Difficulty {getSortIcon(matrixSort, 'lvl')}
-                        </th>
-                      )}
-
-                      {!hiddenCols.includes('func') && (
-                        <th onClick={() => handleMatrixSort('func')} className="sticky top-0 bg-slate-100 z-30 px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 w-36 cursor-pointer hover:bg-slate-200 transition-colors">
-                          Function {getSortIcon(matrixSort, 'func')}
-                        </th>
-                      )}
-
-                      {!hiddenCols.includes('isExt') && (
-                        <th onClick={() => handleMatrixSort('isExt')} className="sticky top-0 bg-slate-100 z-30 px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 w-24 cursor-pointer hover:bg-slate-200 transition-colors">
-                          Existing? {getSortIcon(matrixSort, 'isExt')}
-                        </th>
-                      )}
-
-                      {!hiddenCols.includes('s') && (
-                        <th onClick={() => handleMatrixSort('s')} className="sticky top-0 bg-slate-100 z-30 px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-300 w-44 cursor-pointer hover:bg-slate-200 transition-colors">
-                          Originated By {getSortIcon(matrixSort, 's')}
-                        </th>
-                      )}
-
-                      {DEPT_INFO.map((dept) => (
-                        !hiddenCols.includes(dept.abbr) && (
-                          <th key={dept.abbr} title={dept.full} className="sticky top-0 bg-slate-100 z-30 px-2 py-3 text-center border-r border-gray-200 w-16">
-                            <div className="flex flex-col items-center justify-center space-y-1.5">
-                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide ${dept.type === 'SBU' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
-                                {dept.type}
-                              </span>
-                              <span className="text-[11px] font-extrabold text-gray-800" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', height: '60px' }}>
-                                {dept.abbr}
-                              </span>
-                            </div>
-                          </th>
-                        )
-                      ))}
-                    </tr>
-                  </thead>
-
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {currentData.length > 0 ? (
-                      currentData.map((row) => (
-                        <tr key={row.id} className="hover:bg-blue-50 transition-colors group">
-                          {isAdmin && (
-                            <td className="sticky left-0 bg-white group-hover:bg-blue-50 z-20 px-2 py-4 align-top border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb] w-16 text-center">
-                              <div className="flex justify-center space-x-1">
-                                <button onClick={() => setEditingTopic(row)} className="text-gray-400 hover:text-blue-600 transition p-1 rounded hover:bg-blue-100" title="Edit Topic">
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                                <button onClick={() => deleteTopic(row.id)} className="text-gray-400 hover:text-red-600 transition p-1 rounded hover:bg-red-100" title="Delete Topic">
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          )}
-
-                          {!hiddenCols.includes('c') && (
-                            <td
-                              className={`sticky ${isAdmin ? 'left-[64px]' : 'left-0'} bg-white group-hover:bg-blue-50 z-20 px-5 py-4 align-top border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb] cursor-pointer hover:bg-blue-100 transition`}
-                              style={{ width: '280px', minWidth: '280px' }}
-                              onClick={() => setViewingCategory(row.c)}
-                            >
-                              <div className="flex flex-col items-start gap-1">
-                                <span className="text-[13px] font-bold text-blue-900 leading-snug hover:underline decoration-blue-300 underline-offset-2">{row.c}</span>
-                                <span className="text-[10px] text-gray-500 font-medium flex items-center"><Info className="w-3 h-3 mr-1" /> View Details</span>
-                              </div>
-                            </td>
-                          )}
-
-                          {!hiddenCols.includes('t') && (
-                            <td
-                              className={`sticky bg-white group-hover:bg-blue-50 z-20 px-5 py-4 align-top border-r border-gray-200 ${!hiddenCols.includes('c') ? 'shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]' : 'shadow-[1px_0_0_0_#e5e7eb]'}`}
-                              style={{ left: !hiddenCols.includes('c') ? (isAdmin ? '344px' : '280px') : (isAdmin ? '64px' : '0px'), width: '380px', minWidth: '380px' }}
-                            >
-                              <span className="text-[13px] font-semibold text-gray-800 leading-snug block">{row.t}</span>
-                              <span className="text-[10px] text-gray-500 mt-1 line-clamp-2 leading-relaxed" title={row.desc}>{row.desc}</span>
-                            </td>
-                          )}
-
-                          {!hiddenCols.includes('lvl') && (
-                            <td className="px-5 py-4 text-xs text-gray-700 align-top border-r border-gray-200">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border ${row.lvl === 'Advance' ? 'bg-red-50 text-red-700 border-red-200' : row.lvl === 'Intermediate' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-green-50 text-green-700 border-green-200'}`}>
-                                {row.lvl}
-                              </span>
-                            </td>
-                          )}
-
-                          {!hiddenCols.includes('func') && (
-                            <td className="px-4 py-4 text-xs text-gray-700 align-top border-r border-gray-200">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${row.func === 'Development' ? 'bg-purple-50 text-purple-700 border-purple-200' : row.func === 'Administration' ? 'bg-orange-50 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-                                <Briefcase className="w-3 h-3 mr-1.5" />{row.func}
-                              </span>
-                            </td>
-                          )}
-
-                          {/* EXISTING COL */}
-                          {!hiddenCols.includes('isExt') && (
-                            <td className="px-4 py-4 text-center align-top border-r border-gray-200">
-                              {row.isExt === 'Yes' ? (
-                                <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-800 border border-green-300">
-                                  <Check className="w-3 h-3 mr-1" /> YES
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-gray-100 text-gray-500 border border-gray-200">
-                                  NO
-                                </span>
-                              )}
-                            </td>
-                          )}
-
-                          {!hiddenCols.includes('s') && (
-                            <td className="px-4 py-4 text-[10px] text-gray-500 align-top border-r border-gray-300 font-medium">
-                              {row.s.split(', ').map((source, i) => (
-                                <span key={i} className="inline-block bg-gray-100 px-1.5 py-0.5 rounded mr-1 mb-1 border border-gray-200 text-gray-600">{source}</span>
-                              ))}
-                            </td>
-                          )}
-
-                          {DEPT_INFO.map((dept) => {
-                            if (hiddenCols.includes(dept.abbr)) return null;
-                            const isApplicable = row.tg.includes(dept.full);
-                            return (
-                              <td key={dept.abbr} className={`px-2 py-4 text-center align-middle border-r border-gray-100 transition-colors ${isApplicable ? 'bg-green-50/40 group-hover:bg-green-100/50' : ''}`}>
-                                {isApplicable ? (
-                                  <div className="flex justify-center"><div className="h-5 w-5 bg-green-500 rounded flex items-center justify-center shadow-sm"><Check className="h-3.5 w-3.5 text-white stroke-[3]" /></div></div>
-                                ) : (
-                                  <div className="flex justify-center"><div className="h-1.5 w-1.5 rounded-full bg-gray-200"></div></div>
-                                )}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={visibleColCount} className="px-6 py-16 text-center text-gray-500">
-                          <div className="flex flex-col items-center justify-center">
-                            <Search className="h-10 w-10 text-gray-300 mb-3" />
-                            <p className="text-lg font-medium">No training topics found matching your criteria.</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* PAGINATION */}
-              {totalPages > 1 && (
-                <div className="bg-white px-4 py-3 border-t border-gray-200 flex items-center justify-between sm:px-6 relative z-30">
-                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-gray-700">
-                        Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredData.length)}</span> of <span className="font-medium">{filteredData.length}</span> results
-                      </p>
-                    </div>
-                    <div>
-                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                        <button
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={currentPage === 1}
-                          className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'}`}
-                        >
-                          <ChevronLeft className="h-5 w-5" />
-                        </button>
-                        <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                          Page {currentPage} of {totalPages}
-                        </span>
-                        <button
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={currentPage === totalPages}
-                          className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-50'}`}
-                        >
-                          <ChevronRight className="h-5 w-5" />
-                        </button>
-                      </nav>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* LEGEND */}
-            <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-500 bg-white p-4 rounded-lg border border-gray-200 shadow-sm relative z-0">
-              <div className="w-full font-bold text-gray-700 mb-1 border-b pb-2 uppercase tracking-wider text-[10px]">
-                Department Abbreviations Legend
-              </div>
-              {DEPT_INFO.map((dept) => (
-                <div key={dept.abbr} className="flex items-center space-x-1.5 w-40">
-                  <span className={`px-1 rounded text-[9px] font-bold ${dept.type === 'SBU' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
-                    {dept.type}
-                  </span>
-                  <span className="font-bold">{dept.abbr}:</span>
-                  <span className="truncate" title={dept.full}>{dept.full}</span>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* ========================================================= */}
-        {/* VIEW 2: DEPARTMENT SUMMARY DASHBOARD */}
-        {/* ========================================================= */}
-        {activeTab === 'summary' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative z-0">
-            <div className="bg-slate-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center">
-                <BarChart2 className="w-5 h-5 text-blue-600 mr-3" />
-                <div>
-                  <h2 className="text-lg font-bold text-gray-800">Category Distribution by Department</h2>
-                  <p className="text-xs text-gray-500">Volume of unique training topics mapped across the enterprise. Click headers to sort.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto custom-scrollbar max-h-[750px] overflow-y-auto relative">
-              <table className="min-w-max w-full divide-y divide-gray-200">
-                <thead className="bg-white sticky top-0 z-30 shadow-sm">
-                  <tr>
-                    <th
-                      onClick={() => handleSummarySort('category')}
-                      className="sticky left-0 bg-white z-40 px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb] cursor-pointer hover:bg-slate-50 transition-colors"
-                      style={{ width: '320px', minWidth: '320px' }}
-                    >
-                      Granular Category {getSortIcon(summarySort, 'category')}
-                    </th>
-                    <th
-                      onClick={() => handleSummarySort('total')}
-                      className="sticky bg-slate-100 z-40 px-4 py-4 text-center text-xs font-extrabold text-blue-900 uppercase tracking-wider border-r border-gray-300 w-28 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)] cursor-pointer hover:bg-slate-200 transition-colors"
-                      style={{ left: '320px' }}
-                    >
-                      Total {getSortIcon(summarySort, 'total')}
-                    </th>
-
-                    {DEPT_INFO.map((dept) => (
-                      <th
-                        key={dept.abbr}
-                        title={`Sort by ${dept.full}`}
-                        onClick={() => handleSummarySort(dept.full)}
-                        className="px-2 py-4 text-center border-r border-gray-200 w-16 align-bottom cursor-pointer hover:bg-slate-50 transition-colors"
-                      >
-                        <div className="flex flex-col items-center space-y-2 h-24 justify-end">
-                          {getSortIcon(summarySort, dept.full)}
-                          <span className="text-[11px] font-extrabold text-gray-800 writing-vertical transform -rotate-180 mb-2 mt-1">
-                            {dept.abbr}
-                          </span>
-                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide ${dept.type === 'SBU' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
-                            {dept.type}
-                          </span>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
-                  {summaryData.map((row, idx) => (
-                    <tr key={row.category} className={`hover:bg-blue-50 transition-colors ${idx % 2 === 0 ? 'bg-gray-50/30' : 'bg-white'}`}>
-                      <td className="sticky left-0 bg-inherit z-20 px-6 py-3 border-r border-gray-200 shadow-[1px_0_0_0_#e5e7eb]" style={{ width: '320px', minWidth: '320px' }}>
-                        <span className="text-sm font-bold text-gray-800 cursor-pointer hover:text-blue-600 hover:underline" onClick={() => setViewingCategory(row.category)}>
-                          {row.category}
-                        </span>
-                      </td>
-                      <td className="sticky bg-blue-50 z-20 px-4 py-3 text-center font-extrabold text-blue-900 border-r border-blue-200 text-base shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]" style={{ left: '320px' }}>
-                        {row.total}
-                      </td>
-                      {DEPT_INFO.map((dept) => {
-                        const count = row.depts[dept.full];
-                        return (
-                          <td key={dept.full} className={`px-2 py-3 text-center border-r border-gray-100 text-sm font-medium ${count > 0 ? 'text-gray-900 bg-green-50/30' : 'text-gray-300'}`}>
-                            {count > 0 ? count : '-'}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-slate-100 sticky bottom-0 z-30 shadow-[0_-2px_5px_-2px_rgba(0,0,0,0.1)]">
-                  <tr>
-                    <td className="sticky left-0 bg-slate-100 z-40 px-6 py-4 border-r border-gray-300 shadow-[1px_0_0_0_#cbd5e1]" style={{ width: '320px', minWidth: '320px' }}>
-                      <span className="text-sm font-extrabold text-gray-900 uppercase tracking-widest">Enterprise Total</span>
-                    </td>
-                    <td className="sticky bg-blue-100 z-40 px-4 py-4 text-center font-extrabold text-blue-900 border-r border-blue-300 text-lg shadow-[2px_0_5px_-2px_rgba(0,0,0,0.15)]" style={{ left: '320px' }}>
-                      {enterpriseTotal}
-                    </td>
-                    {DEPT_INFO.map((dept) => (
-                      <td key={dept.full} className="px-2 py-4 text-center border-r border-gray-300 text-sm font-extrabold text-gray-900">
-                        {deptGrandTotals[dept.full]}
-                      </td>
-                    ))}
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </div>
-        )}
+        {activeTab === 'matrix' && renderHeatmap()}
+        {activeTab === 'behavior' && renderBehavior()}
+        {activeTab === 'catalog' && renderCatalog()}
       </main>
 
-      {/* ========================================================= */}
-      {/* MODALS */}
-      {/* ========================================================= */}
-
-      {/* Category Info Modal */}
-      {viewingCategory && (
-        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
-            <div className="bg-blue-900 px-6 py-4 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-white flex items-center"><Info className="w-5 h-5 mr-2" /> Category Details</h3>
-              <button onClick={() => setViewingCategory(null)} className="text-blue-200 hover:text-white"><X className="w-5 h-5" /></button>
-            </div>
-            <div className="p-6">
-              <h4 className="text-xl font-bold text-gray-900 mb-2">{viewingCategory}</h4>
-              <p className="text-gray-600 leading-relaxed mb-6">{getDynamicCategoryDesc(viewingCategory)}</p>
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex items-start space-x-3">
-                <ShieldCheck className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-blue-900 mb-1">Total Topics in Category</p>
-                  <p className="text-2xl font-black text-blue-700">{topics.filter((t) => t.c === viewingCategory).length}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-6 py-4 border-t flex justify-end">
-              <button onClick={() => setViewingCategory(null)} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg text-sm font-medium">Close</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Admin Login Modal */}
+      {/* Admin Modals */}
       {showAdminLogin && (
-        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all border border-gray-100">
-            <div className="p-6 text-center">
-              <div className="mx-auto w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
-                <Lock className="w-8 h-8" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Admin Unlock</h3>
-              <p className="text-sm text-gray-500 mb-6">Enter the master password to unlock permanent cloud-editing features for the Enterprise Skill Matrix.</p>
-
-              <input
-                type="password"
-                placeholder="Password..."
-                value={adminPassword}
-                onChange={(e) => setAdminPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
-                className="w-full text-center text-lg px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4"
-              />
-
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => { setShowAdminLogin(false); setAdminPassword(''); }}
-                  className="flex-1 py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-                <button onClick={handleAdminLogin} className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-colors">
-                  Unlock
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Category Manager Modal */}
-      {showCategoryManager && (
         <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl h-[85vh] flex flex-col overflow-hidden transform transition-all border border-gray-100">
-            <div className="bg-purple-900 px-6 py-4 flex justify-between items-center flex-shrink-0">
-              <h3 className="text-lg font-bold text-white flex items-center"><FolderEdit className="w-5 h-5 mr-2" /> Manage Categories</h3>
-              <button
-                onClick={() => { setShowCategoryManager(false); setCategoryToManage(''); }}
-                className="text-purple-200 hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="flex border-b bg-gray-50 flex-shrink-0">
-              <button
-                onClick={() => setCatManagerTab('details')}
-                className={`px-6 py-3 text-sm font-bold border-b-2 transition ${catManagerTab === 'details' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
-              >
-                Edit / Delete
-              </button>
-              <button
-                onClick={() => setCatManagerTab('add')}
-                className={`px-6 py-3 text-sm font-bold border-b-2 transition ${catManagerTab === 'add' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
-              >
-                Add New
-              </button>
-              <button
-                onClick={() => setCatManagerTab('assign')}
-                className={`px-6 py-3 text-sm font-bold border-b-2 transition ${catManagerTab === 'assign' ? 'border-purple-600 text-purple-700 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
-              >
-                Assign Topics
-              </button>
-            </div>
-
-            <div className="p-6 bg-gray-50 flex-1 overflow-y-auto custom-scrollbar">
-              {catManagerTab === 'details' && (
-                <div className="max-w-lg mx-auto">
-                  <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 mb-6">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">Select Category to Manage</label>
-                    <select
-                      value={categoryToManage}
-                      onChange={(e) => setCategoryToManage(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm mb-4 bg-white"
-                    >
-                      <option value="">-- Select a Category --</option>
-                      {ALL_CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-
-                    {categoryToManage && (
-                      <div className="border-t border-gray-100 pt-4 space-y-4">
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Category Name</label>
-                          <input
-                            type="text"
-                            value={catNameInput}
-                            onChange={(e) => setCatNameInput(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Description / Details</label>
-                          <textarea
-                            rows="3"
-                            value={catDescInput}
-                            onChange={(e) => setCatDescInput(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
-                          />
-                        </div>
-                        <button onClick={handleSaveCategory} className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition shadow-sm">
-                          Save Changes
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {categoryToManage && (
-                    <div className="bg-red-50 p-4 rounded-lg border border-red-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-bold text-red-800">Danger Zone</p>
-                        <p className="text-xs text-red-600">Delete this category. Its topics will safely move to "Uncategorized".</p>
-                      </div>
-                      <button onClick={handleDeleteCategory} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition shadow-sm whitespace-nowrap">
-                        Delete Category
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {catManagerTab === 'add' && (
-                <div className="max-w-lg mx-auto bg-white p-5 rounded-lg shadow-sm border border-gray-200">
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">New Category Name</label>
-                      <input
-                        type="text"
-                        value={catNameInput}
-                        onChange={(e) => setCatNameInput(e.target.value)}
-                        placeholder="e.g., Advanced Strategic Finance"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Description / Details</label>
-                      <textarea
-                        rows="3"
-                        value={catDescInput}
-                        onChange={(e) => setCatDescInput(e.target.value)}
-                        placeholder="What kind of topics belong here?"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
-                      />
-                    </div>
-                    <button onClick={handleSaveCategory} className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition shadow-sm flex items-center justify-center">
-                      <Plus className="w-4 h-4 mr-2" /> Create Category
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {catManagerTab === 'assign' && (
-                <div className="flex flex-col h-full">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 flex-shrink-0">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Target Category</label>
-                      <select
-                        value={categoryToManage}
-                        onChange={(e) => setCategoryToManage(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm bg-white"
-                      >
-                        <option value="">-- Select Category --</option>
-                        {ALL_CATEGORIES.map((cat) => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Filter Topics</label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <input
-                          type="text"
-                          placeholder="Search to filter..."
-                          value={assignSearch}
-                          onChange={(e) => setAssignSearch(e.target.value)}
-                          className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-sm"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {categoryToManage ? (
-                    <div className="flex-1 bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col min-h-[300px]">
-                      <div className="bg-gray-100 px-4 py-2 border-b border-gray-200 flex justify-between items-center flex-shrink-0">
-                        <span className="text-xs font-bold text-gray-600 uppercase">Check topics to assign them to: <span className="text-purple-700">{categoryToManage}</span></span>
-                        <span className="text-xs font-semibold text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200">{topicsToAssign.length} Selected</span>
-                      </div>
-                      <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
-                        {topics
-                          .filter((t) => t.t.toLowerCase().includes(assignSearch.toLowerCase()) || t.c.toLowerCase().includes(assignSearch.toLowerCase()))
-                          .sort((a, b) => a.t.localeCompare(b.t))
-                          .map((t) => {
-                            const isChecked = topicsToAssign.includes(t.id);
-                            return (
-                              <div
-                                key={t.id}
-                                onClick={() => setTopicsToAssign(isChecked ? topicsToAssign.filter((id) => id !== t.id) : [...topicsToAssign, t.id])}
-                                className={`flex items-start p-2 rounded cursor-pointer border-b border-transparent hover:border-gray-100 ${isChecked ? 'bg-purple-50/50' : 'hover:bg-gray-50'}`}
-                              >
-                                {isChecked ? <CheckSquare className="h-5 w-5 text-purple-600 mr-3 flex-shrink-0 mt-0.5" /> : <Square className="h-5 w-5 text-gray-300 mr-3 flex-shrink-0 mt-0.5" />}
-                                <div>
-                                  <p className={`text-sm font-semibold ${isChecked ? 'text-purple-900' : 'text-gray-700'}`}>{t.t}</p>
-                                  <p className="text-[10px] text-gray-400 mt-0.5">Currently in: <span className={t.c === categoryToManage ? 'text-purple-600 font-bold' : 'text-gray-500'}>{t.c}</span></p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                      </div>
-                      <div className="p-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
-                        <button onClick={handleSaveAssignments} className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition shadow-sm flex justify-center items-center">
-                          <Save className="w-4 h-4 mr-2" /> Save Bulk Assignments
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg p-6 bg-white min-h-[300px]">
-                      <FolderEdit className="w-12 h-12 text-gray-300 mb-3" />
-                      <p className="text-gray-500 font-medium">Select a target category to start assigning topics.</p>
-                    </div>
-                  )}
-                </div>
-              )}
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden p-6 text-center border border-gray-100">
+            <div className="mx-auto w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mb-4"><Lock className="w-6 h-6" /></div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Admin Unlock</h3>
+            <p className="text-xs text-gray-500 mb-6 font-medium">Enter password to manage Training Catalog.</p>
+            <input
+              type="password"
+              placeholder="Password..."
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+              className="w-full text-center text-sm px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 mb-4 font-bold"
+            />
+            <div className="flex space-x-3">
+              <button onClick={() => { setShowAdminLogin(false); setAdminPassword(''); }} className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm font-bold transition">Cancel</button>
+              <button onClick={handleAdminLogin} className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold transition shadow-sm">Unlock</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Editing Modal (CRUD) */}
       {editingTopic && (
         <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden transform transition-all border border-gray-100">
-            <div className="bg-blue-900 px-6 py-4 flex justify-between items-center flex-shrink-0">
-              <h3 className="text-lg font-bold text-white flex items-center">
-                <Edit className="w-5 h-5 mr-2" /> {editingTopic.id ? 'Edit Training Topic' : 'Add New Training Topic'}
-              </h3>
-              <button onClick={() => setEditingTopic(null)} className="text-blue-200 hover:text-white"><X className="w-5 h-5" /></button>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col">
+            <div className="bg-indigo-900 px-5 py-4 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-white flex items-center"><Edit className="w-5 h-5 mr-2" /> {editingTopic.id ? 'Edit Topic' : 'New Topic'}</h3>
+              <button onClick={() => setEditingTopic(null)} className="text-indigo-200 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
-
-            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50">
-              <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 mb-6">
-                <h4 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider border-b pb-2">Topic Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  <div className="md:col-span-3">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Training Topic Name</label>
-                    <textarea
-                      rows="2"
-                      value={editingTopic.t}
-                      onChange={(e) => setEditingTopic({ ...editingTopic, t: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold"
-                      placeholder="e.g., Engine Maintenance Overview"
-                    />
-                  </div>
-                  
-                  <div className="md:col-span-3">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Topic Description / Objective</label>
-                    <textarea
-                      rows="3"
-                      value={editingTopic.desc || ''}
-                      onChange={(e) => setEditingTopic({ ...editingTopic, desc: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      placeholder="Enter a brief description or learning objective for this topic..."
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Category (Create or Select)</label>
-                    <input
-                      type="text"
-                      list="category-list"
-                      value={editingTopic.c}
-                      onChange={(e) => setEditingTopic({ ...editingTopic, c: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                    <datalist id="category-list">
-                      {ALL_CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat} />
-                      ))}
-                    </datalist>
-                  </div>
-
-                  <div className="md:col-span-1">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Difficulty Level</label>
-                    <select
-                      value={editingTopic.lvl}
-                      onChange={(e) => setEditingTopic({ ...editingTopic, lvl: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
-                    >
-                      <option value="Basic">Basic</option>
-                      <option value="Intermediate">Intermediate</option>
-                      <option value="Advance">Advance</option>
-                    </select>
-                  </div>
-                  
-                  <div className="md:col-span-1">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Job Function</label>
-                    <select
-                      value={editingTopic.func || 'Operations'}
-                      onChange={(e) => setEditingTopic({ ...editingTopic, func: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
-                    >
-                      <option value="Operations">Operations</option>
-                      <option value="Development">Development</option>
-                      <option value="Administration">Administration</option>
-                    </select>
-                  </div>
-
-                  <div className="md:col-span-1">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Originated By (Source Data)</label>
-                    <input
-                      type="text"
-                      value={editingTopic.s}
-                      onChange={(e) => setEditingTopic({ ...editingTopic, s: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      placeholder="e.g., Asset Charter, Logistics"
-                    />
-                  </div>
-
-                  <div className="md:col-span-1">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Already Exist?</label>
-                    <select
-                      value={editingTopic.isExt || 'No'}
-                      onChange={(e) => setEditingTopic({ ...editingTopic, isExt: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
-                    >
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  </div>
+            <div className="p-5 flex-1 overflow-y-auto bg-slate-50 space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Topic Name</label>
+                <input type="text" value={editingTopic.t} onChange={e => setEditingTopic({...editingTopic, t: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Description</label>
+                <textarea rows="2" value={editingTopic.desc} onChange={e => setEditingTopic({...editingTopic, desc: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Category</label>
+                  <input list="cat-list" value={editingTopic.c} onChange={e => setEditingTopic({...editingTopic, c: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white font-medium" />
+                  <datalist id="cat-list">{DYNAMIC_CATEGORIES.map(c => <option key={c} value={c} />)}</datalist>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Domain Mapping (Liner D1-D19 or Text)</label>
+                  <input list="dom-list" value={editingTopic.d} onChange={e => setEditingTopic({...editingTopic, d: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white font-medium" />
+                  <datalist id="dom-list">
+                    {LINER_DOMAINS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    <option value="Corporate Support" />
+                    <option value="Logistics & Supply Chain" />
+                    <option value="Ship Management & Tech" />
+                  </datalist>
                 </div>
               </div>
-
-              <div className="bg-white p-5 rounded-lg shadow-sm border border-gray-200">
-                <div className="flex items-center justify-between border-b pb-2 mb-4">
-                  <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Applicable Departments ({editingTopic.tg.length})</h4>
-                  <button
-                    onClick={() => setEditingTopic({ ...editingTopic, tg: editingTopic.tg.length === ALL_UNITS.length ? [] : [...ALL_UNITS] })}
-                    className="text-xs font-medium text-blue-600 hover:text-blue-800"
-                  >
-                    {editingTopic.tg.length === ALL_UNITS.length ? 'Deselect All' : 'Select All'}
-                  </button>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Difficulty Level</label>
+                  <select value={editingTopic.lvl} onChange={e => setEditingTopic({...editingTopic, lvl: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white font-medium">
+                    {CATALOG_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
                 </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                  {DEPT_INFO.map((dept) => {
-                    const isChecked = editingTopic.tg.includes(dept.full);
-                    return (
-                      <div
-                        key={dept.full}
-                        onClick={() => {
-                          const newTg = isChecked ? editingTopic.tg.filter((d) => d !== dept.full) : [...editingTopic.tg, dept.full];
-                          setEditingTopic({ ...editingTopic, tg: newTg });
-                        }}
-                        className={`flex items-center p-2 rounded-md cursor-pointer border transition-colors ${isChecked ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`}
-                      >
-                        {isChecked ? <CheckSquare className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" /> : <Square className="h-4 w-4 text-gray-300 mr-2 flex-shrink-0" />}
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-gray-500 leading-tight">{dept.abbr}</span>
-                          <span className="text-xs font-semibold text-gray-800 truncate" title={dept.full}>{dept.full}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Target Entities / SBUs (Comma separated)</label>
+                  <input type="text" value={editingTopic.tg.join(', ')} onChange={e => setEditingTopic({...editingTopic, tg: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)})} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white font-medium" placeholder="e.g. Asset Charter, Logistics" />
                 </div>
               </div>
             </div>
-
-            <div className="bg-white px-6 py-4 border-t flex justify-between items-center flex-shrink-0">
-              {editingTopic.id ? (
-                <button onClick={() => deleteTopic(editingTopic.id)} className="flex items-center px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-sm font-semibold transition-colors">
-                  <Trash2 className="w-4 h-4 mr-2" /> Delete Topic
-                </button>
-              ) : <div></div>}
-
-              <div className="flex space-x-3">
-                <button onClick={() => setEditingTopic(null)} className="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm font-semibold transition-colors">
-                  Cancel
-                </button>
-                <button onClick={() => saveTopic(editingTopic)} className="flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm transition-colors">
-                  <Check className="w-4 h-4 mr-2" /> Save to Cloud
-                </button>
-              </div>
+            <div className="bg-white px-5 py-4 border-t flex justify-end space-x-3">
+              <button onClick={() => setEditingTopic(null)} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm font-bold">Cancel</button>
+              <button onClick={() => saveTopic(editingTopic)} className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold flex items-center"><Save className="w-4 h-4 mr-2"/> Save Topic</button>
             </div>
           </div>
         </div>
       )}
 
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
+      <style dangerouslySetInnerHTML={{ __html: `
         .writing-vertical { writing-mode: vertical-rl; }
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-      `,
-        }}
-      />
+        @keyframes fade-in-down {
+          0% { opacity: 0; transform: translateY(-10px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-down { animation: fade-in-down 0.3s ease-out; }
+      `}} />
     </div>
   );
 }
